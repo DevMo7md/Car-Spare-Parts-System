@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    /* تنسيق النص العنوان */
+    .header-text {
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px 0;
+        color: #333;
+    }
+
+    /* تنسيق الخط الأفقي */
+    .custom-hr {
+        width: 120px; /* اجعل الخط قصيرًا */
+        height: 2px; /* اجعل الخط سميكًا قليلاً */
+        background-color: #007bff; /* لون حديث */
+        border: none; /* إزالة الحدود الافتراضية */
+        margin: 10px auto; /* جعله في المنتصف */
+    }
+
+    /* تحسين المسافات العامة */
+    .content {
+        background: #f9f9f9; /* خلفية فاتحة للنص */
+        padding: 20px;
+        border-radius: 8px; /* زوايا مستديرة للصندوق */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* تأثير الظل */
+        font-family:Verdana, Geneva, Tahoma, sans-serif, sans-serif; /* خط حديث ومريح */
+    }
+
+    /* تحسين الصفحة بشكل عام */
+    body {
+        background: #eef2f7; /* خلفية حديثة للصفحة */
+    }
+    td {
+        font-size: x-large;
+    }
+    .modal-header {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-bottom: 2px solid #f5c6cb;
+}
+
+.modal-footer {
+    border-top: none;
+}
+
+.modal-body p {
+    font-size: 1.2rem;
+    color: #6c757d;
+}
+
+</style>
+
+<div class="col-lg-10">
+    <div class="content">
+        <div class="row">
+            <!-- عنوان الصفحة -->
+            <div class="header-text">
+                <h3>المنتج #{{ part.id }}</h3>
+            </div>
+            <!-- الخط الأفقي -->
+            <hr class="custom-hr">
+            <br>
+            <table class="table table-hover">
+                <thead>
+                    <tr class="table-dark">
+                    <th scope="row"></th>
+                    <th scope="row"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>اسم القطعة : {{ part.name }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>وصف عن القطعة : {{ part.description }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>السعر  : {{ part.price }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>العدد المتوفر : {{ part.stock_quantity }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>الفئة : {{ part.category }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>اسم المورد : {{ part.supplier.name }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
+                        <td><a style="text-decoration: none; color:#333;" href="https://wa.me/20{{ part.supplier.phone }}">رقم المورد : {{ part.supplier.phone }}</a></td>    
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
+                        <td>تاريخ الإضافة : {{ part.created_at }}</td>   
+                    </tr>
+
+                    <tr>
+                        <th scope="row"></th>
+                        <td>الباركود : {% if part.qr_code %}<img src="{{ part.qr_code.url }}" width="150px" height="150px">{% else %}<span>لا يوجد باركود لهذا المنتج. </span>{% endif %}</td>   
+                    </tr>
+                
+                </tbody>
+            </table>
+            <div class="d-flex justify-content-center edit-button">
+                <a href="{% url 'edit_product' part.id %}" style="margin: 20px;" class="btn btn-lg btn-success">تعديل</a>
+                <button style="margin: 20px;" class="btn btn-lg btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">حذف</button>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <p>هل أنت متأكد أنك تريد حذف هذا المنتج؟</p>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-center">
+                            <a href="{% url 'delete_product' part.id %}" class="btn btn-danger">حذف</a>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-light">
+    <img src="{% static 'img/younislogo-removebg2.png' %}" style="width: 120px; margin-right:40px;" alt="logo">
+        <div class="container">
+            <a class="navbar-brand" href="#">يونس</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'home' %}">الصفحة الرئيسية</a>
+                    </li>
+                    <li class="nav-item">
+                        <form method="GET" class="d-flex" role="search">
+                            <input class="form-control me-2" name="search-bar" type="search" placeholder="بحث" aria-label="Search">
+                            <button class="btn btn-outline-dark" type="submit">بحث</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>

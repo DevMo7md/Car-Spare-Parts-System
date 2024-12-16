@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load custom_filters %}
+<div class="col-lg-10">
+    <div class="content">
+        <h2 style="padding: 20px;">
+            المنتجات
+        </h2>
+        <form method="post">
+        {% csrf_token %}
+        <table border="1" class="table table-hover">
+            <thead>
+                <tr class="table-dark">
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in invoice.items.all %}
+                <tr>
+                    <td>{{ item.spare_part.name }}</td>
+                    <td>
+                        <input type="number" name="quantity_{{ item.id }}" value="{{ item.quantity }}" min="0">
+                    </td>
+                    <td>{{ item.price }}</td>
+                    <td>{{ item.quantity|multiply:item.price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-success" style="margin: 20px;">Update</button>
+    </form>
+
+    <h4 style="margin-top: 10px; margin-right: 20px;">Total Price: {{ invoice.total_price }}</h4>
+    <form method="POST" action="{% url 'archive_invoice' invoice.id %}" class="d-flex justify-content-center">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-dark" style="margin: 10px;">تم البيع (ارشفة)</button>
+    </form>
+
+    </div>
+</div>        
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .mb-3{
+        margin: 30px;
+        padding: 10px;
+    }
+    .content{
+        height: 160vh;
+    }
+</style>
+<div class="col-lg-10">
+    <div class="content">
+        <h2 style="padding: 20px;">
+            اضافة منتج
+        </h2>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">اسم القطعة</label>
+                <input type="text" name="name" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlTextarea1" class="form-label">وصف عن القطعة (ملاحظات)</label>
+                <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">السعر</label>
+                <input type="text" name="price" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">العدد</label>
+                <input type="number" name="quantity" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">الفئة</label>&nbsp;&nbsp;&nbsp;<button style="margin: 20px;" class="btn btn-lg" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="fa-solid fa-plus"></i></button>
+                <select name="category" id="category" class="form-control" required>
+                    <option value="" disabled selected>اختر من القائمة...</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select><br>
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">المورد</label>&nbsp;&nbsp;&nbsp;<button style="margin: 20px;" class="btn btn-lg" data-bs-toggle="modal" data-bs-target="#addModal"><i class="fa-solid fa-plus"></i></button>
+                <select name="supplier" id="supplier" class="form-control" required>
+                    <option value="" disabled selected>اختر من القائمة...</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                    {% endfor %}
+                </select><br>
+            </div>
+            <div class="d-flex justify-content-center">
+                <button style="margin: 20px;" type="submit" class="btn btn-success">حفظ</button>
+            </div>
+        </form>
+            <!-- add category modal form -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">اضافة فئة</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                        </div>
+                        <form id="category-form">
+                            {% csrf_token %}
+                        <input type="hidden" name="url" value="{% url 'add_category' %}">
+                        <div class="modal-body text-center">
+                            <p>اضف فئة جديدة</p><br>
+                            <input type="text" placeholder="اسم الفئة" name="category_name" class="form-control" id="category-name">
+                        </div>
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="submit" class="btn btn-success">إضافة</button>
+                        </div>
+                        </form>
+
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- add supplier modal form -->
+            <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">اضافة مورد</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                        </div>
+                        <input type="hidden" name="supurl" value="{% url 'add_supplier' %}">
+                        <form id="supplier-form">
+                        {% csrf_token %}
+                        <div class="modal-body text-center">
+                            <p>اضف مورد جديد</p><br>
+                            <input type="text" placeholder="اسم المورد" name="name" class="form-control" id="name"><br>
+                            <input type="text" placeholder="العنوان" name="address" class="form-control" id="address"><br>
+                            <input type="text" placeholder="رقم الهاتف" name="phone" class="form-control" id="phone"><br>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="submit" class="btn btn-success">إضافة</button>
+                        </div>
+                        </form>
+
+                        <div class="modal-footer d-flex justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>   
+<!-- مكتبة jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+<!-- مكتبة Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#category').select2({
+        width: '100%',
+        placeholder: 'اختر من القائمة...',
+        allowClear: true
+    });
+});
+
+$(document).ready(function() {
+    $('#supplier').select2({
+        width: '100%',
+        placeholder: 'اختر من القائمة...',
+        allowClear: true
+    });
+});
+
+// add category
+$(document).on('submit', '#category-form', function(e) {
+    e.preventDefault();
+    $.ajax({
+        type: 'POST',
+        url: $('input[name="url"]').val(),
+        data: {
+            category_name: $("#category-name").val(),
+            csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(data) {
+            // عرض رسالة نجاح
+            alert(data.message);
+
+            // إضافة الفئة الجديدة إلى القائمة باستخدام ID الفئة
+            const newCategoryId = data.id;  // تأكد من أن ID الفئة يتم إرجاعه من السيرفر
+            const newCategoryName = $("#category-name").val();
+            $('#category') // حدد القائمة
+                .append(new Option(newCategoryName, newCategoryId, true, true)) // أضف العنصر الجديد باستخدام الـ ID
+                .trigger('change'); // حدث التحديث للـ select2
+
+
+            // إعادة تعيين الحقول داخل المودال
+            $("#category-name").val('');
+            $('#deleteModal').modal('hide'); // إغلاق المودال
+        },
+        error: function(xhr) {
+            console.error(xhr.responseText);
+            alert('حدث خطأ: ' + xhr.responseText); // رسالة خطأ
+        }
+    });
+});
+
+
+// add supplier
+$(document).on('submit', '#supplier-form', function(e) {
+    e.preventDefault();
+    $.ajax({
+        type: 'POST',
+        url: $('input[name="supurl"]').val(),
+        data: {
+            name: $("#name").val(),
+            address: $("#address").val(),
+            phone: $("#phone").val(),
+            csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+        },
+        success: function(data) {
+            alert(data.message);
+
+            // إضافة المورد الجديد إلى القائمة
+            const newSupplierId = data.id;
+            const newSupplier = $("#name").val();
+            $('#supplier') // حدد القائمة
+                .append(new Option(newSupplier, newSupplierId, true, true)) // أضف العنصر الجديد
+                .trigger('change'); // حدث التحديث للـ select2
+
+            // إعادة تعيين الحقول داخل المودال
+            $("#name").val('');
+            $('#addModal').modal('hide'); // إغلاق المودال
+        },
+        error: function(xhr) {
+            console.error(xhr.responseText);
+            alert('حدث خطأ: ' + xhr.responseText);
+        }
+    });
+});
+
+</script>     
+{% endblock %}

@@ -1,0 +1,148 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+    font-family: "Alexandria", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    background-color: rgb(242, 248, 255); /* لون الخلفية الأساسي */
+    color: #333; /* لون النص الأساسي */
+}
+
+#sidepar {
+    background-color: rgb(40, 40, 51); /* لون الشريط الجانبي */
+    color: white;
+    height: 100vh; /* يضمن الامتداد لكامل ارتفاع الشاشة */
+    overflow-y: auto; /* للسماح بالتمرير إذا كانت المحتويات طويلة */
+    position: sticky; /* يظل الشريط الجانبي ثابتًا عند التمرير */
+    top: 0; /* يضمن البقاء في الأعلى */
+}
+
+#sidepar .head-photo{
+    background-image: url("/static/img/younislogo-removebg.png");
+    background-size: cover; /* لجعل الصورة تغطي كامل القسم */
+    background-position: center; /* لجعل الصورة متمركزة */
+    background-repeat: no-repeat; /* منع تكرار الصورة */
+    height: 80px;
+}
+
+#sidepar .head h3 {
+    color: #fff; /* لون النص */
+    font-family: "Alexandria", sans-serif;
+}
+
+#sidepar .links a {
+    text-decoration: none; /* إزالة الخط السفلي من الروابط */
+    color: white; /* لون النص */
+    display: block;
+    margin-bottom: 10px;
+    padding: 5px;
+}
+
+#sidepar .links a:hover {
+    background-color: rgba(255, 255, 255, 0.1); /* تأثير عند التمرير */
+}
+
+.navbar {
+    background-color: #ffffff; /* لون خلفية أبيض */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* ظل خفيف */
+}
+
+.navbar-brand {
+    font-size: 1.5rem; /* حجم خط العنوان */
+    font-weight: bold;
+    color: #333; /* لون العنوان */
+    position: relative; /* لكي نتمكن من تحديد موضع الخط */
+}
+
+.navbar-brand::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px; /* سمك الخط */
+    background-color: black; /* لون الخط */
+    width: 0%; /* العرض الابتدائي 0% */
+    transition: width 0.3s ease; /* تأثير تدريجي لزيادة العرض */
+}
+
+.navbar-brand:hover::after {
+    width: 100%; /* عند التمرير، يصبح العرض 100% */
+}
+
+.nav-link {
+    color: #333; /* لون روابط الناف بار */
+    margin-right: 15px; /* مسافة بين الروابط */
+    position: relative; /* لكي نتمكن من تحديد موضع الخط */
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px; /* سمك الخط */
+    background-color: black; /* لون الخط */
+    width: 0%; /* العرض الابتدائي 0% */
+    transition: width 0.3s ease; /* تأثير تدريجي لزيادة العرض */
+}
+
+.nav-link:hover::after {
+    width: 100%; /* عند التمرير، يصبح العرض 100% */
+}
+
+.box {
+
+    background-color: #f0f0f0; /* لون خلفية الصندوق */
+    border: 1px solid #ddd; /* تحديد إطار للصندوق */
+    border-radius: 5px; /* حواف مدورة */
+    text-align: center; /* تموضع النص في المنتصف افقيًا */
+    padding: 20px;
+    margin: 20px;
+    transition: background-color 0.3s ease; /* تأثير تدريجي */
+}
+
+.box-links{
+    color: #333; /* لون النص */
+    text-decoration: none;
+}
+
+.icon-text {
+    margin-top: 15px; /* مسافة بين الأيقونة والنص */
+    font-size: 18px; /* حجم الخط */
+    color: #333; /* لون النص */
+    font-weight: bold; /* جعل النص غامق */
+}
+
+/* تأثير عند التمرير على الصندوق */
+.box:hover {
+    background-color: #e0e0e0; /* تغيير اللون عند التمرير */
+}
+.content {
+    margin: 10px;
+    height: 95%;
+    background-color: rgb(255, 255, 255);
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999999;
+    visibility: hidden; /* الإخفاء بشكل افتراضي */
+}
+
+.loading-overlay img {
+    width: 150px;
+    height: 150px;
+}

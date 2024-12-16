@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+    <style>
+        .content {
+            padding: 20px;
+        }
+        .backup-section, .restore-section {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f8f9fa;
+        }
+        .btn-backup, .btn-restore {
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+<div class="col-lg-10">
+    <div class="content">    
+        <div class="container mt-5">
+            <h2 class="text-center">مزامنة قاعدة البيانات</h2>
+            
+            <!-- Backup Section -->
+            <div class="backup-section">
+                <h4>نسخ احتياطي</h4>
+                <p>ما عليك سوى النقر فوق الزر لعمل نسخة احتياطية من قاعدة البيانات الخاصة بك.</p>
+                <form action="{% url 'backup' %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary btn-backup">نسخ احتياطي</button>
+                </form>
+            </div>
+
+            <!-- Restore Section -->
+            <div class="restore-section">
+                <h4>استعادة البيانات</h4>
+                <p>يجب أن يكون امتداد الملف <strong>.sqlite</strong></p>
+                <form action="{% url 'restore_backup' %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <input type="file" name="backup_file" class="form-control" accept=".sqlite3" required>
+                    </div>
+                    <button type="submit" class="btn btn-success btn-restore">استعادة</button>
+                </form>
+            </div>
+            <div class="d-flex justify-content-center" style="margin: 20px;">
+                <a href="{% url 'home' %}" class="btn btn-dark">الرجوع للصفحة الرئيسية</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

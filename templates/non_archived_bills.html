@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load custom_filters %}
+<div class="col-lg-10">
+    <div class="content">
+        <h2 style="padding: 20px;">
+            الفواتير الغير مؤرشفة
+        </h2><br>
+        <table class="table table-hover">
+        <thead>
+            <tr class="table-dark">
+            <th scope="col">ID</th>
+            <th scope="col">تاريخ الإنشاء</th>
+            <th scope="col">اجمالي السعر</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bill in bills %}
+                <tr onclick="window.location.href='{% url 'edit_invoice_page' bill.id %}';" style="cursor: pointer;">
+                <th scope="row">{{bill.id}}</th>
+                <td>{{bill.created_at|date_in_arabic:"medium"}}</td>
+                <td>{{bill.total_price}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+</div>        
+{% endblock %}

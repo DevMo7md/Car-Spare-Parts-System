@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="col-lg-10">
+    <div class="content">
+        <h1>قراءة الباركود</h1>
+        <!-- معاينة الكاميرا -->
+        <div id="preview" style="width: 300px; height: 300px; border: solid black; border-radius: 8px;"></div>
+        <!-- نموذج لإرسال الباركود -->
+        <form id="barcode-form" method="post" style="margin-top: 20px;">
+            {% csrf_token %}
+            <input type="hidden" name="barcode_id" id="barcode-id">
+            <button type="submit" style="display: none;" class="btn btn-primary">إضافة المنتج للسلة</button>
+            <button type="button" id="reset-barcode" class="btn btn-secondary">إعادة تعيين الباركود</button>
+        </form>
+        <p id="barcode-status" style="margin-top: 10px; color: green;"></p>
+
+        <h2 style="padding: 20px;">
+            المنتجات
+        </h2>
+        <table class="table table-hover">
+        <thead>
+            <tr class="table-dark">
+            <th scope="col">ID</th>
+            <th scope="col">الإسم</th>
+            <th scope="col">العدد</th>
+            <th scope="col">السعر</th>
+            <th scope="col">الفئة</th>
+            <th scope="col">المورد</th>
+            <th scope="col">تاريخ الإضافة</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in invoice.items.all %}
+                <tr>
+                <th scope="row">{{part.spare_part.id}}</th>
+                <td>{{part.spare_part.name}}</td>
+                <td>{{part.spare_part.stock_quantity}}</td>
+                <td>{{part.spare_part.price}}</td>
+                <td>{{part.spare_part.category}}</td>
+                <td>{{part.spare_part.supplier.name}}</td>
+                <td>{{part.spare_part.created_at}}</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <th scope="row">اجمالي السعر : </th>
+                <td colspan="4" class="d-flex justify-content-center">{{invoice.total_price}}</td>
+                <td colspan="2" class="d-flex justify-content-center"><a class="btn btn-success" href="{% url 'edit_invoice_page' invoice.id %}">تم</a></td>
+            </tr>
+        </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- مكتبات الجافا سكربت -->
+<script src="https://unpkg.com/html5-qrcode/html5-qrcode.min.js"></script>
+
+<script>
+    // إعداد مكتبة Html5Qrcode
+    const previewElement = document.querySelector("#preview");
+    const barcodeInput = document.querySelector("#barcode-id");
+    const resetButton = document.querySelector("#reset-barcode");
+    const statusElement = document.querySelector("#barcode-status");
+
+    const html5QrCode = new Html5Qrcode("preview");
+    let lastScannedBarcodes = [];
+
+    // دالة التحقق من التكرار
+    function isBarcodeDuplicate(barcode) {
+        return lastScannedBarcodes.includes(barcode);
+    }
+
+    // بدء تشغيل الكاميرا
+    html5QrCode.start(
+        { facingMode: "user" }, // الكاميرا الأمامية
+        { fps: 10, qrbox: { width: 300, height: 300 } },
+        (decodedText, decodedResult) => {
+            // تحقق من التكرار
+            if (!isBarcodeDuplicate(decodedText)) {
+                lastScannedBarcodes.push(decodedText); // أضف الباركود إلى القائمة
+                barcodeInput.value = decodedText; // حفظ القيمة في الحقل المخفي
+                statusElement.textContent = `تم قراءة الباركود: ${decodedText}`;
+                document.querySelector("#barcode-form").submit(); // إرسال النموذج
+            } else {
+                statusElement.textContent = "تم قراءة هذا الباركود مسبقًا.";
+            }
+        },
+        (errorMessage) => {
+            console.warn("Scanning error:", errorMessage); // عرض الأخطاء
+        }
+    ).catch((err) => {
+        console.error("Error initializing camera:", err);
+        alert("تعذر الوصول إلى الكاميرا. يرجى التحقق من الأذونات أو الجهاز.");
+    });
+
+    // زر إعادة التعيين
+    resetButton.addEventListener("click", () => {
+        barcodeInput.value = "";
+        statusElement.textContent = "تمت إعادة تعيين الباركود.";
+    });
+
+    // تنظيف قائمة الباركودات كل دقيقة
+    setInterval(() => {
+        lastScannedBarcodes = [];
+        console.log("تم تنظيف قائمة الباركودات المكررة.");
+    }, 60000); // تنظيف كل دقيقة
+</script>
+
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .mb-3{
+        margin: 30px;
+        padding: 10px;
+    }
+    .content{
+        height: 135vh;
+    }
+</style>
+<div class="col-lg-10">
+    <div class="content">
+        <h2 style="padding: 20px;">
+            تعديل المنتج
+        </h2>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">اسم القطعة</label>
+                <input type="text" name="name" value="{{product.name}}" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlTextarea1" class="form-label">وصف عن القطعة (ملاحظات)</label>
+                <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="3">{{product.description}}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">السعر</label>
+                <input type="text" name="price" value="{{product.price}}" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">العدد</label>
+                <input type="number" name="quantity" value="{{product.stock_quantity}}" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">الفئة</label>
+                <select name="category" id="category" class="form-control" required>
+                    <option value="" disabled selected>اختر من القائمة...</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if product.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select><br>
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">المورد</label>
+                <select name="supplier" id="supplier" class="form-control" required>
+                    <option value="" disabled selected>اختر من القائمة...</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if product.supplier.id == supplier.id %}selected{% endif %}>{{ supplier.name }}</option>
+                    {% endfor %}
+                </select><br>
+            </div>
+            <div class="d-flex justify-content-center">
+                <button style="margin: 20px;" type="submit" class="btn btn-success">حفظ</button>
+            </div>
+        </form>
+        
+    </div>
+</div>   
+<!-- مكتبة jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+<!-- مكتبة Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $('#category').select2({
+        width: '100%',
+        placeholder: 'اختر من القائمة...',
+        allowClear: true
+    });
+});
+
+$(document).ready(function() {
+    $('#supplier').select2({
+        width: '100%',
+        placeholder: 'اختر من القائمة...',
+        allowClear: true
+    });
+});
+
+</script>     
+{% endblock %}

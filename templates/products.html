@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="col-lg-10">
+    <div class="content">
+        <h2 style="padding: 20px;">
+            المنتجات
+        </h2>
+        <table class="table table-hover">
+        <thead>
+            <tr class="table-dark">
+            <th scope="col">ID</th>
+            <th scope="col">الإسم</th>
+            <th scope="col">العدد</th>
+            <th scope="col">السعر</th>
+            <th scope="col">الفئة</th>
+            <th scope="col">المورد</th>
+            <th scope="col">تاريخ الإضافة</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for part in parts %}
+                <tr onclick="window.location.href='{% url 'spare_part_detail' part.id %}';" style="cursor: pointer;">
+                <th scope="row">{{part.id}}</th>
+                <td>{{part.name}}</td>
+                <td>{{part.stock_quantity}}</td>
+                <td>{{part.price}}</td>
+                <td>{{part.category}}</td>
+                <td>{{part.supplier.name}}</td>
+                <td>{{part.created_at}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+</div>        
+{% endblock %}
