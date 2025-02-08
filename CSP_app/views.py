@@ -359,17 +359,6 @@ def add_category(request):
         return JsonResponse({'message': 'تم اضافة الفئة بنجاح' , 'id': category.id}, status=200)
 
 
-def add_supplier(request):
-    if request.method == 'POST':
-        name = request.POST['name']
-        address = request.POST['address']
-        phone = request.POST['phone']
-        supplier = Supplier(name=name, address=address, phone=phone)
-        supplier.save()
-        messages.success(request, 'تم اضافة المورد بنجاح')
-        return JsonResponse({'message': 'تم اضافة المورد بنجاح', 'id': supplier.id}, status=200)
-
-
 def categories(request):
     categories = Category.objects.all()
     if 'search-bar' in request.GET:

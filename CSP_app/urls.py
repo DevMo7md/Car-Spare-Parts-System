@@ -21,7 +21,6 @@ urlpatterns = [
     path('backup/', views.backup, name='backup'),
     path('restore-backup/', views.restore_backup_view, name='restore_backup'),
     path('add-category/', views.add_category, name='add_category'),
-    path('add-supplier/', views.add_supplier, name='add_supplier'),
     path('create-category/', views.create_category, name='create_category'),
     path('categories/', views.categories, name='categories'),
     path('category-details/<int:pk>/', views.category_details, name='category_details'),
