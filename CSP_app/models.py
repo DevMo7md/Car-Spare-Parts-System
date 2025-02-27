@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 import qrcode
 from reportlab.lib.pagesizes import landscape
 from io import BytesIO
@@ -119,3 +120,13 @@ class BillItem(models.Model):
 
     def __str__(self):
         return f"{self.spare_part.name} (x{self.quantity})"        
+    
+
+class VerivcationToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    reset_password_token = models.CharField(max_length=40, unique=True, null=True, blank=True)
+    reset_password_expires = models.DateTimeField(null=True, blank=True)
+    is_used = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Token for {self.user.username} - {self.reset_password_token}"

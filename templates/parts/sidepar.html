@@ -9,15 +9,15 @@
     </div>
     <div class="links p-3">
         <ul class="list-unstyled">
-            <li><a href="{% url 'home' %}" class="text-white">الرئيسية</a></li>
-            <li><a href="{% url 'products' %}" class="text-white">قطع الغيار (المنتجات)</a></li>
-            <li><a href="{% url 'mkbill' %}" class="text-white">عمل فاتورة</a></li>
-            <li><a href="{% url 'add_product' %}" class="text-white">اضافة منتج</a></li>
-            <li><a href="{% url 'suppliers' %}" class="text-white">الموردين</a></li>
-            <li><a href="{% url 'categories' %}" class="text-white">الفئات</a></li>
-            <li><a href="{% url 'create_category' %}" class="text-white">إضافة فئة</a></li>
-            <li><a href="{% url 'archived_bills' %}" class="text-white">الفواتير المؤرشفة</a></li>
-            <li><a href="{% url 'backup' %}" class="text-white">النسخ الإحتياطي</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'home' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">الرئيسية</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'products' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">قطع الغيار (المنتجات)</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'mkbill' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">عمل فاتورة</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'add_product' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">اضافة منتج</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'suppliers' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">الموردين</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'categories' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">الفئات</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'create_category' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">إضافة فئة</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'archived_bills' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">الفواتير المؤرشفة</a></li>
+            <li><a {% if request.user.is_authenticated %} href="{% url 'backup' %}" {% else %}href="{% url 'login' %}"{% endif %} class="text-white">النسخ الإحتياطي</a></li>
         </ul>
     </div>
 

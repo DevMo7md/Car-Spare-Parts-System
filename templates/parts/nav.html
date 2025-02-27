@@ -9,14 +9,21 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'home' %}">الصفحة الرئيسية</a>
+                        <a class="nav-link active" {% if request.user.is_authenticated %}href="{% url 'home' %}"{% else %}href="{% url 'login' %}"{% endif %}>الصفحة الرئيسية</a>
                     </li>
                     <li class="nav-item">
                         <form method="GET" class="d-flex" role="search">
                             <input class="form-control me-2" name="search-bar" type="search" placeholder="بحث" aria-label="Search">
-                            <button class="btn btn-outline-dark" type="submit">بحث</button>
+                            <button class="btn btn-outline-dark me-2" type="submit">بحث</button>
                         </form>
                     </li>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">   
+                        {% if request.user.is_authenticated %} 
+                        <li class="nav-item">
+                            <a class="btn btn-outline-danger me-2" href="{% url 'logout' %}">تسجيل الخروج</a>
+                        </li>
+                        {% endif %}
+                    </div>
                 </ul>
             </div>
         </div>

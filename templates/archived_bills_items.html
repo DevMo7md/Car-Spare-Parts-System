@@ -72,9 +72,9 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <!-- <div class="d-flex justify-content-center edit-button">
-                <a href="#" style="margin: 20px;" class="btn btn-lg btn-success">تعديل</a>
-            </div> -->
+            <div class="d-flex justify-content-center">
+                <a style="margin: 20px;" href="{% url 'generate_invoice_pdf' bill.id %}" class="btn btn-warning" target="_blank">ملف pdf</a>
+            </div>
         </div>
     </div>
 </div>

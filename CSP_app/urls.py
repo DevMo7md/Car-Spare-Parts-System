@@ -2,6 +2,11 @@ from django.urls import path
 from . import views
 urlpatterns = [
     path('', views.home, name='home'),
+    path('login/', views.login_view, name='login'),
+    path('register/', views.register_view, name='register'),
+    path('logout/', views.logout_view, name='logout'),
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password/<str:token>/', views.reset_password, name='reset_password'),
     path('products/', views.products, name='products'),
     path('spare-part-details/<int:pk>', views.spare_part_detail, name='spare_part_detail'),
     path('make-bill/', views.mkbill, name='mkbill'),
@@ -26,5 +31,6 @@ urlpatterns = [
     path('category-details/<int:pk>/', views.category_details, name='category_details'),
     path('edit-category/<int:pk>/', views.edit_category, name='edit_category'),
     path('delete-categoty/<int:pk>', views.delete_category, name='delete_category'),
+    path('invoice/<int:bill_id>/pdf/', views.generate_invoice_pdf, name='generate_invoice_pdf'),
 
 ]
