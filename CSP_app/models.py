@@ -5,11 +5,16 @@ from reportlab.lib.pagesizes import landscape
 from io import BytesIO
 from django.core.files import File
 from PIL import Image, ImageDraw
-from reportlab.lib.units import inch
+from reportlab.lib.units import inch, cm
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont 
+import arabic_reshaper
+from bidi.algorithm import get_display
+from django.conf import settings
 import os
 # Create your models here.
 
@@ -53,8 +58,8 @@ class SparePart(models.Model):
         if not self.qr_code:
             # توليد كود QR
             qrcode_img = qrcode.make(self.id)  # استبدل self.id بمحتوى فريد إذا لزم الأمر
-            canvas = Image.new('RGB', (290, 290), 'white')
-            qrcode_img = qrcode_img.resize((290, 290))  # ضبط الحجم ليتطابق مع الـ canvas
+            canvas = Image.new('RGB', (200, 200), 'white')
+            qrcode_img = qrcode_img.resize((200, 200))  # ضبط الحجم ليتطابق مع الـ canvas
             
             # لصق كود QR على الـ canvas
             canvas.paste(qrcode_img)
@@ -78,22 +83,28 @@ class SparePart(models.Model):
         buffer = BytesIO()
 
         # إنشاء كائن PDF
-        small_page_size = (4 * inch, 2 * inch)  # أبعاد الورقة الصغيرة
+        small_page_size = (6 * cm, 3 * cm)  # أبعاد الورقة الصغيرة
         pdf_canvas = canvas.Canvas(buffer, pagesize=landscape(small_page_size))
 
         # إضافة النصوص مع تنسيق مناسب
-        pdf_canvas.setFont("Helvetica", 10)
-        pdf_canvas.drawString(10, 50, f"Product: {self.name}")
-        pdf_canvas.drawString(10, 35, f"ID: {self.id}")
-        pdf_canvas.drawString(10, 20, f"Price: {self.price} EGP")
+        path_font = os.path.join(settings.BASE_DIR, 'static/fonts', 'ARIAL.TTF')
+        pdfmetrics.registerFont(TTFont('ArabicFont', path_font))
+        def arabic_text(text):
+            reshaped_text = arabic_reshaper.reshape(text)
+            return get_display(reshaped_text)
+        pdf_canvas.setFont("ArabicFont", 6)
+        pdf_canvas.drawString(5, 55, f"Product: {arabic_text(self.name)}")
+        pdf_canvas.drawString(5, 42, f"Category: {arabic_text(self.category.name)}")
+        pdf_canvas.drawString(5, 29, f"ID: {self.id}")
+        pdf_canvas.drawString(5, 16, f"Price: {self.price} EGP")
 
         # تحميل وإضافة صورة QR Code مع ضبط حجمها
         qr_code_path = self.qr_code.path
         if os.path.exists(qr_code_path):
             pdf_canvas.drawImage(
                 qr_code_path, 
-                x=150, y=10,  # الموقع (معدّل)
-                width=1.5 * inch, height=1.5 * inch  # حجم الصورة
+                x=3*cm, y=0.2*cm,  # الموقع (معدّل)
+                width=2.5 * cm, height=2.5 * cm  # حجم الصورة
             )
 
         # إنهاء وإنشاء PDF
