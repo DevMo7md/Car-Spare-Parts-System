@@ -33,6 +33,9 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def unavailable_parts_count(self):
+        return self.spare_parts.filter(is_available=False).count()
 
 
 
@@ -54,9 +57,10 @@ class SparePart(models.Model):
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     income_bill = models.ForeignKey(IncomeBill, on_delete=models.CASCADE, related_name='spare_parts', null=True, blank=True)
-    stock_quantity = models.IntegerField(default=0)
+    stock_quantity = models.PositiveIntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='spare_parts')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='spare_parts')
+    is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

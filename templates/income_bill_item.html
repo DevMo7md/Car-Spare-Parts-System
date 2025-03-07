@@ -38,7 +38,7 @@
 
 <div class="col-lg-10">
     <div class="content">
-        <div class="row">
+        <div class="row" style="padding: 20px;">
             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                 <a href="{% url 'income_bills' %}" class="btn btn-sm btn-outline-dark">الرجوع للفواتير <i class="fa-solid fa-arrow-left"></i></a>
             </div>
@@ -53,7 +53,25 @@
             <!-- الخط الأفقي -->
             <hr class="custom-hr">
             <br>
-        <div class="row">    
+        {% if income_bill.description %}
+        <div class="row" style="padding: 20px;">
+            <table class="table table-hover">
+                <thead>
+                    <tr class="table-dark">
+                    <th scope="col"></th>
+                    <th scope="col">ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="col"></th>
+                        <td>{{income_bill.description}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        <div class="row" style="padding: 20px;">    
             <table class="table table-hover">
                 <thead>
                     <tr class="table-dark">

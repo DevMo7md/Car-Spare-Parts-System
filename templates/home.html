@@ -13,6 +13,14 @@
                     </a>
                 </div>
                 <div class="col-md-4 mb-4">
+                    <a class="box-links" href="{% url 'empty_products' %}">
+                    <div class="box d-flex flex-column justify-content-center align-items-center">
+                        <i class="fa-solid fa-clipboard" style="font-size:150px;"></i>
+                        <p class="icon-text">قطع الغيار الغير متوفرة</p>
+                    </div>
+                    </a>
+                </div>
+                <div class="col-md-4 mb-4">
                     <a class="box-links" href="{% url 'mkbill' %}">
                     <div class="box d-flex flex-column justify-content-center align-items-center">
                         <i class="fa-solid fa-receipt" style="font-size:150px;"></i>
@@ -20,7 +28,9 @@
                     </div>
                     </a>
                 </div>
-                <div class="col-md-4 mb-4">
+            </div>
+            <div class="row">
+                                <div class="col-md-4 mb-4">
                     <a class="box-links" href="{% url 'income_bills' %}">
                     <div class="box d-flex flex-column justify-content-center align-items-center">
                         <i class="fa-solid fa-file-invoice" style="font-size:150px;"></i>
@@ -28,8 +38,6 @@
                     </div>
                     </a>
                 </div>
-            </div>
-            <div class="row">
                 <div class="col-md-4 mb-4">
                     <a class="box-links" href="{% url 'suppliers' %}">
                     <div class="box d-flex flex-column justify-content-center align-items-center">
@@ -46,6 +54,8 @@
                     </div>
                     </a>
                 </div>
+            </div>
+            <div class="row">
                 <div class="col-md-4 mb-4">
                     <a class="box-links" href="{% url 'non_archived_bills' %}">
                     <div class="box d-flex flex-column justify-content-center align-items-center">
@@ -54,8 +64,6 @@
                     </div>
                     </a>
                 </div>
-            </div>
-            <div class="row">
                 <div class="col-md-4 mb-4">
                     <a class="box-links" href="{% url 'add_supplier' %}">
                     <div class="box d-flex flex-column justify-content-center align-items-center">
@@ -72,13 +80,15 @@
                     </div>
                     </a>
                 </div>
-                <div class="col-md-4 mb-4">
-                    <a class="box-links" href="{% url 'backup' %}">
-                    <div class="box d-flex flex-column justify-content-center align-items-center">
-                        <i class="fa-solid fa-rotate-right" style="font-size:150px;"></i>
-                        <p class="icon-text">عمل نسخ احطياتية من البيانات و استعادة البيانات</p>
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <a class="box-links" href="{% url 'backup' %}">
+                        <div class="box d-flex flex-column justify-content-center align-items-center">
+                            <i class="fa-solid fa-rotate-right" style="font-size:150px;"></i>
+                            <p class="icon-text">عمل نسخ احطياتية من البيانات و استعادة البيانات</p>
+                        </div>
+                        </a>
                     </div>
-                    </a>
                 </div>
             </div>
         </div>

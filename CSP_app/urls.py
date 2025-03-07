@@ -8,6 +8,8 @@ urlpatterns = [
     path('forgot-password/', views.forgot_password, name='forgot_password'),
     path('reset-password/<str:token>/', views.reset_password, name='reset_password'),
     path('products/', views.products, name='products'),
+    path('empty-products/', views.empty_products, name='empty_products'),
+    path('empty-products-by-supplier/<int:supplier_id>/', views.empty_products_by_supplier, name='empty_products_by_supplier'),
     path('spare-part-details/<int:pk>', views.spare_part_detail, name='spare_part_detail'),
     path('income-bills', views.income_bills, name='income_bills'),
     path('income-bills/<int:pk>/', views.income_bill_item, name='income_bill_item'),
@@ -43,5 +45,7 @@ urlpatterns = [
     path('delete-categoty/<int:pk>', views.delete_category, name='delete_category'),
     path('invoice/<int:bill_id>/pdf/', views.generate_invoice_pdf, name='generate_invoice_pdf'),
     path('income-invoice/<int:bill_id>/pdf/', views.generate_income_invoice_pdf, name='generate_income_invoice_pdf'),
+    path('none-available-products/<int:supplier_id>/pdf/', views.generate_empty_products_pdf, name='generate_empty_products_pdf'),
+
 
 ]

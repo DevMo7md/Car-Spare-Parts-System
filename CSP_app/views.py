@@ -127,23 +127,95 @@ def home(request):
 
 
 def products(request):
-
     category_id = request.GET.get('category')
+
+    parts = SparePart.objects.filter(is_available=True)
+
     if category_id:
-        parts = SparePart.objects.filter(category_id=category_id)
-    else:
-        parts = SparePart.objects.all()
-    if 'search-bar' in request.GET:
-        search = request.GET['search-bar']
-        parts = SparePart.objects.filter(Q(name__icontains=search)|Q(category__name__icontains=search)|Q(supplier__name__icontains=search))
+        parts = parts.filter(category_id=category_id)
+
+    search_query = request.GET.get('search-bar', '').strip()
+    if search_query:
+        parts = parts.filter(
+            Q(name__icontains=search_query) | 
+            Q(category__name__icontains=search_query) | 
+            Q(supplier__name__icontains=search_query)
+        ).distinct()
 
     categories = Category.objects.all()
+
+    SparePart.objects.filter(stock_quantity=0, is_available=True).update(is_available=False)
+
     context = {
         'parts': parts,
         'categories': categories,
         'selected_category': category_id,
     }
+
     return render(request, 'products.html', context)
+
+
+def empty_products(request):
+    category_id = request.GET.get('category')
+    
+    parts = SparePart.objects.filter(is_available=False)
+    empty_supplier = Supplier.objects.filter(spare_parts__is_available=False).distinct()
+
+    if category_id:
+        parts = parts.filter(category_id=category_id)
+
+    search_query = request.GET.get('search-bar', '').strip()
+    if search_query:
+        parts = parts.filter(
+            Q(name__icontains=search_query) | 
+            Q(category__name__icontains=search_query) | 
+            Q(supplier__name__icontains=search_query)
+        ).distinct()
+
+    categories = Category.objects.all()
+    for part in parts:
+        if part.stock_quantity > 0:
+            part.is_available = True
+            part.save()
+            
+    context = {
+        'parts': parts,
+        'categories': categories,
+        'selected_category': category_id,
+        'empty_supplier':empty_supplier,
+    }
+    
+    return render(request, 'empty_products.html', context)
+
+def empty_products_by_supplier(request, supplier_id):
+    category_id = request.GET.get('category')
+    
+    parts = SparePart.objects.filter(is_available=False, supplier_id=supplier_id)
+
+    if category_id:
+        parts = parts.filter(category_id=category_id)
+
+    search_query = request.GET.get('search-bar', '').strip()
+    if search_query:
+        parts = parts.filter(
+            Q(name__icontains=search_query) | 
+            Q(category__name__icontains=search_query) | 
+            Q(supplier__name__icontains=search_query)
+        ).distinct()
+
+    categories = Category.objects.all()
+    
+    context = {
+        'parts': parts,
+        'categories': categories,
+        'selected_category': category_id,
+        'supplier_id':supplier_id,
+    }
+    
+    return render(request, 'empty_products_by_supplier.html', context)
+
+
+
 
 
 # عرض تفاصيل قطعة معينة
@@ -322,6 +394,7 @@ def edit_invoice_page(request, invoice_id):
             if quantity:
                 quantity = int(quantity)
                 if quantity == 0:
+                    invoice.total_price -= item.quantity * item.price
                     item.delete()
                 else:
                     if not quantity > item.spare_part.stock_quantity : 
@@ -334,24 +407,51 @@ def edit_invoice_page(request, invoice_id):
                         redirect('edit_invoice_page', item.id)    
 
         invoice.save()
-        messages.success(request, "Invoice updated successfully!")
+        messages.success(request, "تم تحديث الفاتورة بنجاح!")
         return redirect('edit_invoice_page', invoice_id=invoice.id)
 
     return render(request, 'edit_invoice_page.html', {'invoice': invoice})
 
 
+
 def archive_invoice(request, invoice_id):
-
     invoice = get_object_or_404(Bill, id=invoice_id, archived=False)
-    for item in invoice.items.all():
-        # تحديث مخزون المنتجات
-        item.spare_part.stock_quantity -= item.quantity
-        item.spare_part.save()
+    items_available = True  # التحقق مما إذا كانت كل المنتجات متاحة
 
-    invoice.archived = True
-    invoice.save()
-    messages.success(request, "تم الأرشفة بنجاح")
-    return redirect('mkbill')
+    for item in invoice.items.all():
+        spare_part = item.spare_part
+        new_stock = spare_part.stock_quantity - item.quantity
+        
+        if new_stock < 0:
+            items_available = False 
+            messages.error(request, f"المنتج '{item.spare_part.name}' غير متوفر بالكمية المطلوبة.")
+            continue
+
+        spare_part.stock_quantity = new_stock
+        spare_part.is_available = new_stock > 0
+        spare_part.save()
+
+        
+        if new_stock == 0:
+            messages.warning(request, f"المنتج {spare_part.name} أصبح غير متوفر وتم نقله إلى قائمة المنتجات غير المتوفرة.")
+        elif new_stock == 1:
+            messages.info(request, f"المنتج {spare_part.name} متبقي منه قطعة واحدة فقط.")
+
+
+    if items_available:
+        if invoice.items.all().count() == 0:
+            invoice.delete()
+            messages.success(request, "تم حذف الفاتورة الفارغة.")
+            return redirect('mkbill')
+        else:
+            invoice.archived = True
+            invoice.save()
+            messages.success(request, "تم الأرشفة بنجاح.")
+            return redirect('mkbill')
+
+    return redirect('edit_invoice_page', invoice_id=invoice.id)
+
+
 
 def archived_bills(request):
 
@@ -390,7 +490,7 @@ def add_supplier(request):
             supplier = Supplier(name=name, phone=phone, address=address)
             supplier.save()
             messages.success(request, "تم اضافة المورد بنجاح")
-            return redirect('add_supplier')
+            return redirect('suppliers')
         
         return render(request, 'add_supplier.html')
     else:
@@ -788,6 +888,67 @@ def generate_income_invoice_pdf(request, bill_id):
     data.append([
         '', '', arabic_text('الإجمالي الكلي:'), arabic_text(f"{bill.amount:.2f}")
     ])
+
+    # تعديل عرض الأعمدة لمنع قطع النصوص
+    col_widths = [220, 70, 90, 90]
+
+    table = Table(data, colWidths=col_widths)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), 'ArabicFont'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('WORDWRAP', (0, 0), (-1, -1), True),  
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+def generate_empty_products_pdf(request, supplier_id): # generate pdf none available product
+        
+    products = SparePart.objects.filter(is_available=False, supplier_id=supplier_id)
+    date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    path_font = os.path.join(settings.BASE_DIR, 'static/fonts', 'ARIAL.TTF')
+    pdfmetrics.registerFont(TTFont('ArabicFont', path_font))
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{date}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(name='Title', fontName='ArabicFont', fontSize=22, alignment=1, spaceAfter=10)
+    normal_style = ParagraphStyle(name='Normal', fontName='ArabicFont', fontSize=14, alignment=1, spaceAfter=5)
+
+    def arabic_text(text):
+        reshaped_text = arabic_reshaper.reshape(text)
+        return get_display(reshaped_text)
+
+    # عنوان الفاتورة
+    title = Paragraph(arabic_text(f"المنتجات غير المتوفرة"), title_style)
+    elements.append(title)
+    elements.append(Spacer(1, 10))
+
+    # تاريخ الفاتورة
+    supplier_name = arabic_text(f"اسم المورد: {products[0].supplier.name}")
+    date_paragraph = Paragraph(supplier_name, normal_style)
+    elements.append(date_paragraph)
+    elements.append(Spacer(1, 20))
+
+    # إعداد الجدول
+    data = [[arabic_text('المنتج')]]
+
+    for item in products:
+        data.append([
+            arabic_text(item.name),
+        ])
+
 
     # تعديل عرض الأعمدة لمنع قطع النصوص
     col_widths = [220, 70, 90, 90]
