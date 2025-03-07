@@ -9,12 +9,22 @@ urlpatterns = [
     path('reset-password/<str:token>/', views.reset_password, name='reset_password'),
     path('products/', views.products, name='products'),
     path('spare-part-details/<int:pk>', views.spare_part_detail, name='spare_part_detail'),
+    path('income-bills', views.income_bills, name='income_bills'),
+    path('income-bills/<int:pk>/', views.income_bill_item, name='income_bill_item'),
+    path('add-income-bills', views.add_income_bill, name='add_income_bill'),
+    path('edit-income-bill/<int:pk>/', views.edit_income_bill, name='edit_income_bill'),
+    path('delete-income-bill/<int:pk>/', views.delete_income_bill, name='delete_income_bill'),
+    path('edit-income-bill-item/<int:pk>/', views.edit_income_bill_item, name='edit_income_bill_item'), #لسة مش مستخدمة
+    path('delete-bill-item/<int:pk>/', views.delete_bill_item, name='delete_bill_item'),
+    
     path('make-bill/', views.mkbill, name='mkbill'),
     path('archived-bills/', views.archived_bills, name='archived_bills'),
     path('non-archived-bills/', views.non_archived_bills, name='non_archived_bills'),
     path('suppliers/', views.suppliers, name='suppliers'),
-    path('add-product/', views.add_product, name='add_product'),
+    path('add-product/<int:income_bill_id>/', views.add_product, name='add_product'),
     path('add-supplier/', views.add_supplier, name='add_supplier'),
+    path('add-json-supplier/', views.add_json_supplier, name='add_json_supplier'),
+
     path('delete-supplier/<int:pk>/', views.delete_supplier, name='delete_supplier'),
     path('edit-supplier/<int:pk>/', views.edit_supplier, name='edit_supplier'),
     path('edit-invoice-page/<int:invoice_id>', views.edit_invoice_page, name='edit_invoice_page'),
@@ -32,5 +42,6 @@ urlpatterns = [
     path('edit-category/<int:pk>/', views.edit_category, name='edit_category'),
     path('delete-categoty/<int:pk>', views.delete_category, name='delete_category'),
     path('invoice/<int:bill_id>/pdf/', views.generate_invoice_pdf, name='generate_invoice_pdf'),
+    path('income-invoice/<int:bill_id>/pdf/', views.generate_income_invoice_pdf, name='generate_income_invoice_pdf'),
 
 ]

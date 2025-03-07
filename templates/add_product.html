@@ -41,17 +41,9 @@
                     {% endfor %}
                 </select><br>
             </div>
-            <div class="mb-3">
-                <label for="exampleFormControlInput1" class="form-label">المورد</label>&nbsp;&nbsp;&nbsp;<button style="margin: 20px;" class="btn btn-lg" data-bs-toggle="modal" data-bs-target="#addModal"><i class="fa-solid fa-plus"></i></button>
-                <select name="supplier" id="supplier" class="form-control" required>
-                    <option value="" disabled selected>اختر من القائمة...</option>
-                    {% for supplier in suppliers %}
-                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
-                    {% endfor %}
-                </select><br>
-            </div>
             <div class="d-flex justify-content-center">
                 <button style="margin: 20px;" type="submit" class="btn btn-success">حفظ</button>
+                <a style="margin: 20px;" href="{% url 'income_bill_item' product_bill.id %}" class="btn btn-danger">الرجوع للفاتورة</a>
             </div>
         </form>
             <!-- add category modal form -->
@@ -68,34 +60,6 @@
                         <div class="modal-body text-center">
                             <p>اضف فئة جديدة</p><br>
                             <input type="text" placeholder="اسم الفئة" name="category_name" class="form-control" id="category-name">
-                        </div>
-                        <div class="modal-footer d-flex justify-content-center">
-                            <button type="submit" class="btn btn-success">إضافة</button>
-                        </div>
-                        </form>
-
-                        <div class="modal-footer d-flex justify-content-center">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- add supplier modal form -->
-            <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="deleteModalLabel">اضافة مورد</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
-                        </div>
-                        <input type="hidden" name="supurl" value="{% url 'add_supplier' %}">
-                        <form id="supplier-form">
-                        {% csrf_token %}
-                        <div class="modal-body text-center">
-                            <p>اضف مورد جديد</p><br>
-                            <input type="text" placeholder="اسم المورد" name="name" class="form-control" id="name"><br>
-                            <input type="text" placeholder="العنوان" name="address" class="form-control" id="address"><br>
-                            <input type="text" placeholder="رقم الهاتف" name="phone" class="form-control" id="phone"><br>
                         </div>
                         <div class="modal-footer d-flex justify-content-center">
                             <button type="submit" class="btn btn-success">إضافة</button>

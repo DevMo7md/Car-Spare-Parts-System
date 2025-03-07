@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .mb-3{
+        margin: 30px;
+        padding: 10px;
+    }
+    .content{
+        height: 135vh;
+    }
+</style>
+<div class="col-lg-10">
+    <div class="content">
+        <h2 style="padding: 20px;">
+            تعديل المنتج
+        </h2>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">عنوان الفاتورة</label>
+                <input type="text" name="title" value="{{income_bill.title}}" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlTextarea1" class="form-label">ملاحظات</label>
+                <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="3">{{income_bill.description}}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">المورد</label>
+                <select name="supplier" id="supplier" class="form-control" required>
+                    <option value="" disabled selected>اختر من القائمة...</option>
+                    {% for supplier in suppliers %}
+                        <option value="{{ supplier.id }}" {% if income_bill.supplier.id == supplier.id %}selected{% endif %}>{{ income_bill.supplier.name }}</option>
+                    {% endfor %}
+                </select><br>
+            </div>
+            <div class="d-flex justify-content-center">
+                <button style="margin: 20px;" type="submit" class="btn btn-success">حفظ</button>
+            </div>
+        </form>
+        
+    </div>
+</div>   
+<!-- مكتبة jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+
+<!-- مكتبة Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+
+$(document).ready(function() {
+    $('#supplier').select2({
+        width: '100%',
+        placeholder: 'اختر من القائمة...',
+        allowClear: true
+    });
+});
+
+</script>     
+{% endblock %}

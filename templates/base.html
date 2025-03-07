@@ -12,11 +12,20 @@
     <link rel="icon" href="{% static 'img/favicon.ico' %}" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@100..900&family=Kufam:ital,wght@0,400..900;1,400..900&family=Zain:wght@200;300;400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        #loading {
+            background: rgba(0, 0, 0, 0.5) url("{% static 'img/preloader.gif' %}") no-repeat center center;
+            background-size: 15%;
+            height: 100vh;
+            width: 100%;
+            position: fixed;
+            z-index: 100;
+        }
+    </style>
     <title>Younis</title>
 </head>
 <body dir="rtl">
-        <div id="loading" class="loading-overlay">
-            <img src="{% static 'img/giphy (3).gif' %}" alt="Loading...">
+        <div id="loading">
         </div>
     {% if messages %} {% for message in messages %}
     <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -49,33 +58,11 @@
 <!-- مكتبة Font Awesome -->
 <script src="https://kit.fontawesome.com/2edd19b664.js" crossorigin="anonymous"></script>
 <script>
-        // إضافة حدث عند بدء التنقل بين الصفحات
-window.addEventListener('beforeunload', function () {
-    var loadingIcon = document.getElementById('loading');
-    if (loadingIcon) {
-        // إظهار شريط التحميل
-        loadingIcon.style.visibility = 'visible';
-    }
-});
+    var loader = document.getElementById('loading');
+    window.addEventListener('load', function () {
+        loader.style.display = 'none';
+    });
 
-// إضافة حدث عند اكتمال تحميل الصفحة
-window.addEventListener('load', function () {
-    var loadingIcon = document.getElementById('loading');
-    if (loadingIcon) {
-        // إخفاء شريط التحميل
-        loadingIcon.style.visibility = 'hidden';
-    }
-});
-
-// في حال كانت الصفحة تحتوي على عناصر يتم تحميلها ببطء
-document.onreadystatechange = function () {
-    if (document.readyState === "complete") {
-        var loadingIcon = document.getElementById('loading');
-        if (loadingIcon) {
-            loadingIcon.style.visibility = 'hidden';
-        }
-    }
-};
 </script>
 </body>
 

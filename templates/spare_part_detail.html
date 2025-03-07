@@ -76,6 +76,10 @@
                     </tr>
                     <tr>
                         <th scope="row"></th>
+                        <td onclick="window.location.href='{% url 'income_bill_item' part.income_bill.id %}';" style="cursor: pointer;">الفاتورة : {{ part.income_bill.title }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row"></th>
                         <td>وصف عن القطعة : {{ part.description }}</td>
                     </tr>
                     <tr>

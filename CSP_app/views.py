@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.contrib import messages
 import os
+import decimal
 from django.db.models import Q
 import shutil
 from django.conf import settings
@@ -186,6 +187,80 @@ def add_spare_part(request):
     })
 
 
+def income_bills(request):
+    income_bills = IncomeBill.objects.all()
+    if 'search-bar' in request.GET:
+        search = request.GET['search-bar']
+        income_bills = income_bills.filter(title__icontains=search)
+    return render(request, 'income_bills.html', {'income_bills': income_bills})
+
+
+def edit_income_bill(request, pk):
+    income_bill = get_object_or_404(IncomeBill, id=pk)
+    suppliers = Supplier.objects.all()
+    if request.method == 'POST':
+        income_bill.title = request.POST.get('title')
+        income_bill.description = request.POST.get('description')
+        supplier_id = request.POST.get('supplier')
+        income_bill.supplier = get_object_or_404(Supplier, id=supplier_id)
+        income_bill.save()
+        messages.success(request, "تم تحديث الفاتورة بنجاح")
+        return redirect('income_bills')
+    return render(request, 'edit_income_bill.html', {'income_bill': income_bill, 'suppliers':suppliers,})
+
+def delete_income_bill(request, pk):
+    bill = get_object_or_404(IncomeBill, id=pk)
+    bill.delete()
+    messages.success(request, "تم حذف الفاتورة و منتجاتها بنجاح")
+    return redirect('income_bills')
+
+def income_bill_item(request, pk):
+    income_bill = get_object_or_404(IncomeBill, id=pk)
+    return render(request, 'income_bill_item.html', {'income_bill': income_bill})
+
+
+def edit_income_bill_item(request, pk):
+    item = get_object_or_404(IncomeBillItem, id=pk)
+    if request.method == 'POST':
+        item.spare_part.price = request.POST.get('price')
+        item.spare_part.save()
+        item.quantity = request.POST.get('quantity')
+        item.income_bill.amount -= item.total_price
+        item.total_price = decimal.Decimal(item.quantity) * decimal.Decimal(item.spare_part.price)
+        item.save()
+        item.income_bill.amount += item.total_price
+        item.income_bill.save()
+        messages.success(request, "تم تحديث العنصر بنجاح")
+        return redirect('income_bill_item', item.income_bill.id)
+    return render(request, 'edit_income_bill_item.html', {'item': item})
+
+def delete_bill_item(request, pk):
+    item = get_object_or_404(IncomeBillItem, id=pk)
+    item.income_bill.amount -= item.total_price
+    item.income_bill.save()
+    item.delete()
+    messages.success(request, "تم حذف العنصر بنجاح")
+    return redirect('income_bill_item', item.income_bill.id)
+
+
+def add_income_bill(request):
+    if request.method == "POST":
+        title = request.POST.get('title')
+        supplier_id = request.POST.get('supplier')
+        description = request.POST.get('description')
+        supplier = get_object_or_404(Supplier, id=supplier_id)
+        income_bill = IncomeBill.objects.create(
+            title=title,
+            supplier=supplier,
+            description=description,
+        )
+        return redirect('income_bill_item', income_bill.id)
+    suppliers = Supplier.objects.all()
+    return render(request, 'add_income_bill.html', {'suppliers': suppliers})
+
+
+
+
 # البحث عن قطعة بناءً على الباركود
 @csrf_exempt
 def get_spare_part_by_barcode(request):
@@ -321,6 +396,17 @@ def add_supplier(request):
     else:
         messages.error(request, "عفوا ليس لديك صلاحية هذه الصفحة")
         return redirect('home')
+    
+def add_json_supplier(request):
+    if request.method == 'POST':
+        name = request.POST['name']
+        address = request.POST['address']
+        phone = request.POST['phone']
+        supplier = Supplier(name=name, address=address, phone=phone)
+        supplier.save()
+        messages.success(request, 'تم اضافة المورد بنجاح')
+        return JsonResponse({'message': 'تم اضافة المورد بنجاح', 'id': supplier.id}, status=200)
+
 
 def edit_supplier(request, pk):
     if not request.user.is_authenticated:
@@ -374,13 +460,13 @@ def archived_bills_items(request, pk):
     return render(request, 'archived_bills_items.html', {'bill':bill})
 
 
-def add_product(request):
+def add_product(request, income_bill_id):
     if not request.user.is_authenticated:
         messages.error(request, "عفوا يجب عليك تسجيل الدخول اولا")
         return redirect('login')
     if request.user.is_superuser:
-        suppliers = Supplier.objects.all()
         categories = Category.objects.all()
+        product_bill = get_object_or_404(IncomeBill, id=int(income_bill_id))
 
         if request.method == 'POST':
             product_name = request.POST.get('name')
@@ -388,19 +474,20 @@ def add_product(request):
             product_description = request.POST.get('description')
             product_quantity = request.POST.get('quantity')
             product_category_id = request.POST.get('category')
-            product_supplier_id = request.POST.get('supplier')
             try :
                 product_category = get_object_or_404(Category, id=product_category_id)
-                product_supplier = get_object_or_404(Supplier, id=product_supplier_id)
             except:
-                messages.error(request, "عفوا الفئة او المورد غير موجود")
-                return redirect('add_product')
-            product = SparePart(name=product_name, price=product_price, description=product_description, stock_quantity=product_quantity, category=product_category, supplier=product_supplier)
+                messages.error(request, "عفوا الفئة غير موجودة")
+            product = SparePart(name=product_name, price=product_price, income_bill=product_bill, description=product_description, stock_quantity=product_quantity, category=product_category, supplier=product_bill.supplier)
             product.save()
-
+            product_bill.amount += decimal.Decimal(product_price) * decimal.Decimal(product_quantity)
+            product_bill.save()
+            bill_item = IncomeBillItem(income_bill=product_bill, spare_part=product, quantity=product_quantity, total_price=decimal.Decimal(product_price) * decimal.Decimal(product_quantity))
+            bill_item.save()
+            messages.success(request, "تم اضافة المنتج بنجاح")
         context = {
             'categories': categories,
-            'suppliers': suppliers,
+            'product_bill':product_bill,
                 }
 
         return render(request, 'add_product.html', context)
@@ -516,6 +603,7 @@ def add_category(request):
     else:
         messages.error(request, "عفوا ليس لديك صلاحية هذه الصفحة")
         return redirect('home')
+    
 
 def categories(request):
     categories = Category.objects.all()
@@ -627,6 +715,78 @@ def generate_invoice_pdf(request, bill_id):
 
     data.append([
         '', '', arabic_text('الإجمالي الكلي:'), arabic_text(f"{bill.total_price:.2f}")
+    ])
+
+    # تعديل عرض الأعمدة لمنع قطع النصوص
+    col_widths = [220, 70, 90, 90]
+
+    table = Table(data, colWidths=col_widths)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), 'ArabicFont'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('WORDWRAP', (0, 0), (-1, -1), True),  
+    ]))
+
+    elements.append(table)
+    doc.build(elements)
+    return response
+
+
+def generate_income_invoice_pdf(request, bill_id):
+    try:
+        bill = IncomeBill.objects.get(id=bill_id)
+    except Bill.DoesNotExist:
+        return HttpResponse("الفاتورة غير موجودة", status=404)
+
+    bill_items = IncomeBillItem.objects.filter(income_bill=bill)
+
+    path_font = os.path.join(settings.BASE_DIR, 'static/fonts', 'ARIAL.TTF')
+    pdfmetrics.registerFont(TTFont('ArabicFont', path_font))
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{bill.id}.pdf"'
+
+    doc = SimpleDocTemplate(response, pagesize=A4, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(name='Title', fontName='ArabicFont', fontSize=22, alignment=1, spaceAfter=10)
+    normal_style = ParagraphStyle(name='Normal', fontName='ArabicFont', fontSize=14, alignment=1, spaceAfter=5)
+
+    def arabic_text(text):
+        reshaped_text = arabic_reshaper.reshape(text)
+        return get_display(reshaped_text)
+
+    # عنوان الفاتورة
+    title = Paragraph(arabic_text(f"فاتورة رقم {bill.id}"), title_style)
+    elements.append(title)
+    elements.append(Spacer(1, 10))
+
+    # تاريخ الفاتورة
+    date_text = arabic_text(f"التاريخ: {bill.created_at.strftime('%H:%M:%S %d-%m-%Y')}")
+    date_paragraph = Paragraph(date_text, normal_style)
+    elements.append(date_paragraph)
+    elements.append(Spacer(1, 20))
+
+    # إعداد الجدول
+    data = [[arabic_text('المنتج'), arabic_text('الكمية'), arabic_text('السعر'), arabic_text('الإجمالي')]]
+
+    for item in bill_items:
+        total_price = item.total_price
+        data.append([
+            arabic_text(item.spare_part.name),
+            arabic_text(str(item.quantity)),
+            arabic_text(f"{item.spare_part.price:.2f}"),
+            arabic_text(f"{total_price:.2f}")
+        ])
+
+    data.append([
+        '', '', arabic_text('الإجمالي الكلي:'), arabic_text(f"{bill.amount:.2f}")
     ])
 
     # تعديل عرض الأعمدة لمنع قطع النصوص

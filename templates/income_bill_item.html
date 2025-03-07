@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load custom_filters %}
+<style>
+    /* تنسيق النص العنوان */
+    .header-text {
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+        padding: 10px 0;
+        color: #333;
+    }
+
+    /* تنسيق الخط الأفقي */
+    .custom-hr {
+        width: 120px; /* اجعل الخط قصيرًا */
+        height: 2px; /* اجعل الخط سميكًا قليلاً */
+        background-color: #007bff; /* لون حديث */
+        border: none; /* إزالة الحدود الافتراضية */
+        margin: 10px auto; /* جعله في المنتصف */
+    }
+
+    /* تحسين المسافات العامة */
+    .content {
+        background: #f9f9f9; /* خلفية فاتحة للنص */
+        padding: 20px;
+        border-radius: 8px; /* زوايا مستديرة للصندوق */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* تأثير الظل */
+        font-family:Verdana, Geneva, Tahoma, sans-serif, sans-serif; /* خط حديث ومريح */
+    }
+
+    /* تحسين الصفحة بشكل عام */
+    body {
+        background: #eef2f7; /* خلفية حديثة للصفحة */
+    }
+
+</style>
+
+<div class="col-lg-10">
+    <div class="content">
+        <div class="row">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{% url 'income_bills' %}" class="btn btn-sm btn-outline-dark">الرجوع للفواتير <i class="fa-solid fa-arrow-left"></i></a>
+            </div>
+            <h2>فاتورة واردة</h2>
+            <!-- عنوان الصفحة -->
+            <div class="header-text">
+                <h3>الفاتورة #{{ income_bill.id }}</h3>
+            </div>
+            <br>
+            <a class="btn btn-success" href="{% url 'add_product' income_bill.id %}">اضافة منتج للفاتورة</a>
+        </div>
+            <!-- الخط الأفقي -->
+            <hr class="custom-hr">
+            <br>
+        <div class="row">    
+            <table class="table table-hover">
+                <thead>
+                    <tr class="table-dark">
+                    <th scope="col"></th>
+                    <th scope="col">اسم المنتج</th>
+                    <th scope="col">السعر</th>
+                    <th scope="col">العدد</th>
+                    <th scope="col">اجمالي السعر</th>
+                    <th scope="col">الفئة</th>
+                    <th scope="col">المورد</th>
+                    <th scope="col">&nbsp;</th>
+                    <th scope="col">&nbsp;</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in income_bill.items.all %}
+                    <tr>
+                        <th scope="col"></th>
+                        <td>اسم القطعة : {{ item.spare_part.name }}</td>
+                        <td>السعر  : {{ item.spare_part.price }}</td>
+                        <td>العدد  : x{{ item.quantity }}</td>
+                        <td>اجمالي السعر  : {{ item.quantity|multiply:item.spare_part.price }}</td>
+                        <td>الفئة : {{ item.spare_part.category.name }}</td>
+                        <td>اسم المورد : {{ item.spare_part.supplier.name }}</td>
+                        <td><a href="{% url 'edit_income_bill_item' item.id %}" class="btn btn-warning">تعديل</a></td>
+                        <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">حذف</button></td>
+                    </tr>
+                    <!-- Modal -->
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <p>هل أنت متأكد أنك تريد حذف هذه القطعة؟</p>
+                                </div>
+                                <div class="modal-footer d-flex justify-content-center">
+                                    <a href="{% url 'delete_bill_item' item.id %}" class="btn btn-danger">حذف</a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="d-flex justify-content-center">
+                <a style="margin: 20px;" href="{% url 'generate_income_invoice_pdf' income_bill.id %}" class="btn btn-warning" target="_blank">ملف pdf</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

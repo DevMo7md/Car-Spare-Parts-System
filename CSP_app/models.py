@@ -25,7 +25,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-
 class Supplier(models.Model):
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=200)
@@ -36,15 +35,28 @@ class Supplier(models.Model):
         return self.name
 
 
+
+class IncomeBill(models.Model):
+    title = models.CharField(max_length=100)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='income_bills')
+    description = models.TextField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+
 class SparePart(models.Model):
     name = models.CharField(max_length=100)
     qr_code = models.ImageField(upload_to='qr_codes', blank=True)
     qr_pdf = models.FileField(upload_to='qr_pdfs', blank=True)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    income_bill = models.ForeignKey(IncomeBill, on_delete=models.CASCADE, related_name='spare_parts', null=True, blank=True)
     stock_quantity = models.IntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='spare_parts')
-    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='supplier')
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='spare_parts')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -114,6 +126,14 @@ class SparePart(models.Model):
         buffer.seek(0)
         self.qr_pdf.save(pdf_name, File(buffer), save=False)
         buffer.close()
+
+
+class IncomeBillItem(models.Model):
+    income_bill = models.ForeignKey(IncomeBill, on_delete=models.CASCADE, related_name='items')
+    spare_part = models.ForeignKey(SparePart, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+
 
 class Bill(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)

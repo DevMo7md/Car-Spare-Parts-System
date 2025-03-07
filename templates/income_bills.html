@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load custom_filters %}
+<div class="col-lg-10">
+    <div class="content">
+        <h2 style="padding: 20px;">
+            الفواتير الواردة
+        </h2><br>
+        <div class="row" style="padding: 20px;">
+            <h4 style="padding: 20px;">إضافة فاتورة جديدة:</h4>
+            <a class="btn btn-success" href="{% url 'add_income_bill' %}">اضف فاتورة</a>
+        </div>
+        <hr>
+        <div class="row" style="padding: 20px;">
+            <table class="table table-hover">
+            <thead>
+                <tr class="table-dark">
+                <th scope="col">ID</th>
+                <th scope="col">عنوان الفاتورة</th>
+                <th scope="col">المورد</th>
+                <th scope="col">تاريخ الإنشاء</th>
+                <th scope="col">اجمالي السعر</th>
+                <th scope="col">&nbsp;</th>
+                <th scope="col">&nbsp;</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bill in income_bills %}
+                    <tr>
+                    <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.id}}</th>
+                    <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.title}}</th>
+                    <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.supplier.name}}</th>
+                    <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.created_at|date_in_arabic:"medium"}}</td>
+                    <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.amount}}</td>
+                    <td><a href="{% url 'edit_income_bill' bill.id %}" class="btn btn-warning">تعديل</a></td>
+                    <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">حذف</button></td>
+                    </tr>
+                    <!-- Modal -->
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+                                </div>
+                                <div class="modal-body text-center">
+                                    <p>هل أنت متأكد أنك تريد حذف هذه القطعة؟</p>
+                                </div>
+                                <div class="modal-footer d-flex justify-content-center">
+                                    <a href="{% url 'delete_income_bill' bill.id %}" class="btn btn-danger">حذف</a>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>    
+    </div>
+</div>        
+{% endblock %}
