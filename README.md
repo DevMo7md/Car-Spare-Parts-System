@@ -2,7 +2,8 @@
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-4.x-red?logo=django&logoColor=white)
-![License](https://img.shields.io/badge/License-GPL-3.0-green)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 
 نظام إدارة قطع غيار السيارات هو مشروع بسيط يهدف إلى تسهيل إدارة قطع الغيار في ورشة أو متجر سيارات. يتيح النظام للمستخدمين إضافة قطع غيار جديدة، تعديلها، حذفها، وعرضها بطريقة منظمة وسهلة.
 
