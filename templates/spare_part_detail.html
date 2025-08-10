@@ -74,10 +74,17 @@
                         <th scope="row"></th>
                         <td>اسم القطعة : {{ part.name }}</td>
                     </tr>
+                    {% if part.income_bill %}
                     <tr>
                         <th scope="row"></th>
                         <td onclick="window.location.href='{% url 'income_bill_item' part.income_bill.id %}';" style="cursor: pointer;">الفاتورة : {{ part.income_bill.title }}</td>
                     </tr>
+                    {% else %}
+                    <tr>
+                        <th scope="row"></th>
+                        <td>الفاتورة : لا توجد فاتورة مرتبطة</td>
+                    </tr>
+                    {% endif %}
                     <tr>
                         <th scope="row"></th>
                         <td>وصف عن القطعة : {{ part.description }}</td>

@@ -44,6 +44,7 @@ class IncomeBill(models.Model):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='income_bills')
     description = models.TextField()
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -56,11 +57,12 @@ class SparePart(models.Model):
     qr_pdf = models.FileField(upload_to='qr_pdfs', blank=True)
     description = models.TextField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    income_bill = models.ForeignKey(IncomeBill, on_delete=models.CASCADE, related_name='spare_parts', null=True, blank=True)
+    income_bill = models.ForeignKey(IncomeBill, on_delete=models.SET_NULL , related_name='spare_parts', null=True, blank=True)
     stock_quantity = models.PositiveIntegerField(default=0)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='spare_parts')
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='spare_parts')
     is_available = models.BooleanField(default=True)
+    date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -131,12 +133,16 @@ class SparePart(models.Model):
         self.qr_pdf.save(pdf_name, File(buffer), save=False)
         buffer.close()
 
-
+# تعديل مطلوب --> [supplier, category, price, description, name] *add
 class IncomeBillItem(models.Model):
     income_bill = models.ForeignKey(IncomeBill, on_delete=models.CASCADE, related_name='items')
-    spare_part = models.ForeignKey(SparePart, on_delete=models.CASCADE)
+    spare_part = models.ForeignKey(SparePart, on_delete=models.CASCADE, related_name='income_bill_items')
+    name = models.CharField(max_length=100 , blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2 , default=0)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='income_bill_items', null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
-    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2 , default=0)
 
 
 class Bill(models.Model):

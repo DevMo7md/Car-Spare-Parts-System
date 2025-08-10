@@ -30,7 +30,12 @@
                     <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.id}}</th>
                     <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.title}}</th>
                     <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.supplier.name}}</th>
+                    {% if bill.date %}
+                    <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.date|date_in_arabic:"medium"}}</td>
+                    {% else %}
                     <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.created_at|date_in_arabic:"medium"}}</td>
+                    {% endif %}
+                    
                     <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.amount}}</td>
                     <td><a href="{% url 'edit_income_bill' bill.id %}" class="btn btn-warning">تعديل</a></td>
                     <td><button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">حذف</button></td>

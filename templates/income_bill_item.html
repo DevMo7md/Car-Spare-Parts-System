@@ -91,9 +91,9 @@
                     <tr>
                         <th scope="col"></th>
                         <td>اسم القطعة : {{ item.spare_part.name }}</td>
-                        <td>السعر  : {{ item.spare_part.price }}</td>
+                        <td>السعر  : {{ item.price }}</td>
                         <td>العدد  : x{{ item.quantity }}</td>
-                        <td>اجمالي السعر  : {{ item.quantity|multiply:item.spare_part.price }}</td>
+                        <td>اجمالي السعر  : {{ item.quantity|multiply:item.price }}</td>
                         <td>الفئة : {{ item.spare_part.category.name }}</td>
                         <td>اسم المورد : {{ item.spare_part.supplier.name }}</td>
                         <td><a href="{% url 'edit_income_bill_item' item.id %}" class="btn btn-warning">تعديل</a></td>

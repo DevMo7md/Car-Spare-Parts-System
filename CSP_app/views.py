@@ -9,6 +9,7 @@ from django.contrib import messages
 import os
 import decimal
 from django.db.models import Q
+from django.db import transaction
 import shutil
 from django.conf import settings
 from django.urls import reverse
@@ -225,29 +226,46 @@ def spare_part_detail(request, pk):
 
 
 # إضافة قطعة جديدة
-def add_spare_part(request):
+def add_spare_part(request): # غير مستخدمه حاليا (add_product مستخدمه)
     if request.method == "POST":
-        name = request.POST.get('name')
-        description = request.POST.get('description')
-        price = request.POST.get('price')
-        stock_quantity = request.POST.get('stock_quantity')
+        new_name = request.POST.get('name').strip()
+        new_description = request.POST.get('description')
+        new_price = decimal.Decimal(request.POST.get('price', 0))
+        new_stock_quantity = int(request.POST.get('stock_quantity', 0))
         category_id = request.POST.get('category')
         supplier_id = request.POST.get('supplier')
+
+        # تحقق من القيم
+        if new_price <= 0 or new_stock_quantity < 0:
+            messages.error(request, "الرجاء إدخال سعر أكبر من 0 وكمية غير سالبة.")
+            return redirect(reverse('add_spare_part'))
 
         category = get_object_or_404(Category, id=category_id)
         supplier = get_object_or_404(Supplier, id=supplier_id)
 
-        spare_part = SparePart.objects.create(
-            name=name,
-            description=description,
-            price=price,
-            stock_quantity=stock_quantity,
+        spare_part = SparePart.objects.filter(name__iexact=new_name).first()
+
+        if spare_part:
+            if new_price > spare_part.price:
+                spare_part.price = new_price
+            spare_part.stock_quantity += new_stock_quantity
+            spare_part.description = new_description
+            spare_part.category = category
+            spare_part.supplier = supplier
+            spare_part.save()
+            messages.info(request, f"تم تحديث بيانات القطعة {new_name} وزيادة الكمية.")
+            return redirect(reverse('spare_parts_list'))
+
+        SparePart.objects.create(
+            name=new_name,
+            description=new_description,
+            price=new_price,
+            stock_quantity=new_stock_quantity,
             category=category,
             supplier=supplier
         )
 
-        # توجيه المستخدم بعد الإضافة
-        messages.success(request, f"تم إضافة القطعة {spare_part.name} بنجاح!")
+        messages.success(request, f"تم إضافة القطعة {new_name} بنجاح!")
         return redirect(reverse('spare_parts_list'))
     
     categories = Category.objects.all()
@@ -257,7 +275,6 @@ def add_spare_part(request):
         'categories': categories,
         'suppliers': suppliers,
     })
-
 
 def income_bills(request):
     income_bills = IncomeBill.objects.all()
@@ -291,20 +308,36 @@ def income_bill_item(request, pk):
     return render(request, 'income_bill_item.html', {'income_bill': income_bill})
 
 
+
+# مطلوب تعديل & تعديل في الداتا بيز لل income_bill_item
 def edit_income_bill_item(request, pk):
     item = get_object_or_404(IncomeBillItem, id=pk)
+    categories = Category.objects.all()
     if request.method == 'POST':
-        item.spare_part.price = request.POST.get('price')
+        
+        item.spare_part.price = decimal.Decimal(request.POST.get('price')) # تاكيد ع التعديل دا
         item.spare_part.save()
-        item.quantity = request.POST.get('quantity')
+        quantity = int(request.POST.get('quantity'))
+        if quantity < 0:
+            messages.error(request, "الكمية لا يمكن أن تكون سالبة")
+            return redirect('income_bill_item', item.income_bill.id)
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        category_id = request.POST.get('category')
+        category = get_object_or_404(Category, id=category_id)
+        item.name = name
+        item.description = description
+        item.price = decimal.Decimal(request.POST.get('price'))
+        item.quantity = quantity
+        item.category = category
         item.income_bill.amount -= item.total_price
-        item.total_price = decimal.Decimal(item.quantity) * decimal.Decimal(item.spare_part.price)
+        item.total_price = decimal.Decimal(quantity) * decimal.Decimal(item.spare_part.price)
         item.save()
         item.income_bill.amount += item.total_price
         item.income_bill.save()
         messages.success(request, "تم تحديث العنصر بنجاح")
         return redirect('income_bill_item', item.income_bill.id)
-    return render(request, 'edit_income_bill_item.html', {'item': item})
+    return render(request, 'edit_income_bill_item.html', {'item': item, 'categories': categories })
 
 def delete_bill_item(request, pk):
     item = get_object_or_404(IncomeBillItem, id=pk)
@@ -320,11 +353,13 @@ def add_income_bill(request):
         title = request.POST.get('title')
         supplier_id = request.POST.get('supplier')
         description = request.POST.get('description')
+        date = request.POST.get('date')
         supplier = get_object_or_404(Supplier, id=supplier_id)
         income_bill = IncomeBill.objects.create(
             title=title,
             supplier=supplier,
             description=description,
+            date=date,
         )
         return redirect('income_bill_item', income_bill.id)
     suppliers = Supplier.objects.all()
@@ -564,44 +599,119 @@ def add_product(request, income_bill_id):
     if not request.user.is_authenticated:
         messages.error(request, "عفوا يجب عليك تسجيل الدخول اولا")
         return redirect('login')
-    if request.user.is_superuser:
-        categories = Category.objects.all()
-        product_bill = get_object_or_404(IncomeBill, id=int(income_bill_id))
 
-        if request.method == 'POST':
-            product_name = request.POST.get('name')
-            product_price = request.POST.get('price')
-            product_description = request.POST.get('description')
-            product_quantity = request.POST.get('quantity')
-            product_category_id = request.POST.get('category')
-            try :
-                product_category = get_object_or_404(Category, id=product_category_id)
-            except:
-                messages.error(request, "عفوا الفئة غير موجودة")
-            product = SparePart(name=product_name, price=product_price, income_bill=product_bill, description=product_description, stock_quantity=product_quantity, category=product_category, supplier=product_bill.supplier)
-            product.save()
-            product_bill.amount += decimal.Decimal(product_price) * decimal.Decimal(product_quantity)
-            product_bill.save()
-            bill_item = IncomeBillItem(income_bill=product_bill, spare_part=product, quantity=product_quantity, total_price=decimal.Decimal(product_price) * decimal.Decimal(product_quantity))
-            bill_item.save()
-            messages.success(request, "تم اضافة المنتج بنجاح")
-        context = {
-            'categories': categories,
-            'product_bill':product_bill,
-                }
-
-        return render(request, 'add_product.html', context)
-    else:
+    if not request.user.is_superuser:
         messages.error(request, "عفوا ليس لديك صلاحية للوصول الى هذه الصفحة")
         return redirect('home')
+
+    categories = Category.objects.all()
+    product_bill = get_object_or_404(IncomeBill, id=income_bill_id)
+
+    if request.method == 'POST':
+        product_name = request.POST.get('name', '').strip()
+
+        try:
+            product_price = decimal.Decimal(request.POST.get('price', '0'))
+            product_quantity = int(request.POST.get('quantity', '0'))
+        except (decimal.InvalidOperation, ValueError):
+            messages.error(request, "الرجاء إدخال قيم صحيحة للسعر والكمية.")
+            return redirect(reverse('add_product', args=[income_bill_id]))
+
+        product_description = request.POST.get('description', '').strip()
+        product_category_id = request.POST.get('category')
+
+        try:
+            product_category = Category.objects.get(id=product_category_id)
+        except Category.DoesNotExist:
+            messages.error(request, "عفوا الفئة غير موجودة")
+            return redirect(reverse('add_product', args=[income_bill_id]))
+
+        if product_price <= 0 or product_quantity < 0:
+            messages.error(request, "الرجاء إدخال سعر أكبر من 0 وكمية غير سالبة.")
+            return redirect(reverse('add_product', args=[income_bill_id]))
+        try:
+            with transaction.atomic():  # 🔹 ضمان أن كل العمليات تتم أو تتلغي بالكامل
+
+                spare_part = SparePart.objects.filter(name__iexact=product_name).first()
+
+                if spare_part:
+                    # تحديث السعر أو البيانات حسب الحالة
+                    if product_price >= spare_part.price:
+                        spare_part.price = product_price
+                        spare_part.description = product_description
+                        spare_part.category = product_category
+                    spare_part.stock_quantity += product_quantity
+                    spare_part.save()
+
+                    # تحديث إجمالي الفاتورة
+                    total_price = product_price * product_quantity
+                    product_bill.amount += total_price
+                    product_bill.save()
+
+                    # إضافة سجل في الفاتورة
+                    IncomeBillItem.objects.create(
+                        income_bill=product_bill,
+                        spare_part=spare_part,
+                        name=spare_part.name,
+                        price=product_price,
+                        description=product_description,
+                        category=product_category,
+                        quantity=product_quantity,
+                        total_price=total_price,
+                    )
+
+                    messages.info(request, f"تم تحديث بيانات القطعة {product_name} وزيادة الكمية.")
+                    return redirect(reverse('add_product', args=[income_bill_id]))
+
+                # منتج جديد
+                product = SparePart(
+                    name=product_name,
+                    price=product_price,
+                    income_bill=product_bill,
+                    description=product_description,
+                    stock_quantity=product_quantity,
+                    category=product_category,
+                    supplier=product_bill.supplier
+                )
+                product.save()
+
+                # تحديث إجمالي الفاتورة
+                total_price = product_price * product_quantity
+                product_bill.amount += total_price
+                product_bill.save()
+
+                IncomeBillItem.objects.create(
+                    income_bill=product_bill,
+                    spare_part=product,
+                    name=product_name,
+                    price=product_price,
+                    description=product_description,
+                    category=product_category,
+                    quantity=product_quantity,
+                    total_price=total_price,
+                )
+
+                messages.success(request, "تم اضافة المنتج بنجاح")
+                return redirect(reverse('add_product', args=[income_bill_id]))
+        except Exception as e:
+            messages.error(request, f"حدث خطأ أثناء إضافة المنتج: {str(e)}")
+            return redirect(reverse('add_product', args=[income_bill_id]))
+        
+    return render(request, 'add_product.html', {
+        'categories': categories,
+        'product_bill': product_bill
+    })
+
 def delete_product(request,pk):
     if not request.user.is_authenticated:
         messages.error(request, "عفوا يجب عليك تسجيل الدخول اولا")
         return redirect('login')
     if request.user.is_superuser:
         product = get_object_or_404(SparePart, id=pk)
-        product.delete()
-
+        product.stock_quantity = 0
+        product.is_available = False
+        product.save()
+        messages.success(request, "تم حذف المنتج بنجاح")
         return redirect('products')
     else:
         messages.error(request, "عفوا ليس لديك صلاحية هذا الأمر")
@@ -617,9 +727,9 @@ def edit_product(request,pk):
         suppliers = Supplier.objects.all()
         if request.method == 'POST':
             product_name = request.POST.get('name')
-            product_price = request.POST.get('price')
+            product_price = decimal.Decimal(request.POST.get('price'))
             product_description = request.POST.get('description')
-            product_quantity = request.POST.get('quantity')
+            product_quantity = int(request.POST.get('quantity'))
             product_category_id = request.POST.get('category')
             product_supplier_id = request.POST.get('supplier')
             try :
@@ -635,6 +745,10 @@ def edit_product(request,pk):
             product.supplier = product_supplier
             product.category = product_category
             product.save()
+            if product.stock_quantity <= 0:
+                product.is_available = False
+                product.save()
+            messages.success(request, "تم تحديث المنتج بنجاح")
             return redirect('spare_part_detail', product.id)
         context = {
             'product': product,

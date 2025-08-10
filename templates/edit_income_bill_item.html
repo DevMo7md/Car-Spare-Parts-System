@@ -16,14 +16,31 @@
         </h2>
         <form method="POST">
             {% csrf_token %}
-
+            
             <div class="mb-3">
                 <label for="exampleFormControlInput1" class="form-label">السعر</label>
-                <input type="number" step="any" name="price" value="{{item.spare_part.price}}" class="form-control" id="exampleFormControlInput1">
+                <input type="number" step="any" name="price" value="{{item.price}}" class="form-control" id="exampleFormControlInput1">
             </div>
             <div class="mb-3">
                 <label for="exampleFormControlInput1" class="form-label">العدد</label>
                 <input type="number" name="quantity" value="{{item.quantity}}" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">اسم القطعة</label>
+                <input type="text" name="name" value="{{item.name}}" class="form-control" id="exampleFormControlInput1">
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlTextarea1" class="form-label">وصف عن القطعة (ملاحظات)</label>
+                <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="3">{{item.description}}</textarea>
+            </div>
+            <div class="mb-3">
+                <label for="exampleFormControlInput1" class="form-label">الفئة</label>
+                <select name="category" id="category" class="form-control" required>
+                    <option value="" disabled selected>اختر من القائمة...</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if item.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select><br>
             </div>
             <div class="d-flex justify-content-center">
                 <button style="margin: 20px;" type="submit" class="btn btn-success">حفظ</button>
