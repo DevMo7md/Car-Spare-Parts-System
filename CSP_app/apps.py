@@ -5,4 +5,4 @@ class CspAppConfig(AppConfig):
     name = 'CSP_app'
 
     def ready(self):
-        import CSP_app.signals  # تأكد من وجود ملف signals.py في مجلد التطبيق
+        import CSP_app.signals 

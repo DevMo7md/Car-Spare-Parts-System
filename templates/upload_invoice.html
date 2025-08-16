@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    body {
+        direction: rtl;
+        text-align: right;
+    }
+    .upload-container {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+        margin-top: 30px;
+    }
+    .form-label {
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    .messages {
+        list-style: none;
+        padding: 0;
+        margin-top: 20px;
+    }
+    .messages li {
+        padding: 10px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+    }
+    .messages li.success {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .messages li.error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+
+<div class="container col-lg-6">
+    <div class="upload-container">
+        <h2 class="mb-4">📤 رفع فاتورة باستخدام Gemini</h2>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label class="form-label">اختر ملف الفاتورة:</label>
+            <input type="file" name="invoice_file" accept="image/*,application/pdf" class="form-control" required>
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">تحليل الفاتورة</button>
+        </form>
+
+        {% if messages %}
+            <ul class="messages mt-4">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,40 +1,84 @@
-# import time
-# import sys
-# import os
-# from io import BytesIO
-# from django.core.files import File
-# from PIL import Image
-# from reportlab.pdfgen import canvas
-# from reportlab.lib.pagesizes import letter
-# from django.db.models.signals import post_save
-# from django.dispatch import receiver
-# from CSP_app.models import SparePart
+# signals.py
+import qrcode
+import arabic_reshaper
+from bidi.algorithm import get_display
+from io import BytesIO
+from django.core.files import File
+from PIL import Image
+from reportlab.lib.pagesizes import landscape
+from reportlab.lib.units import cm
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from django.conf import settings
+import os
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from .models import SparePart
 
-# def save_qr_code_as_pdf(product_id, qr_image_path, save_path):
-#     try:
-#         pdf_path = os.path.join(save_path, f"barcode_{product_id}.pdf")
-#         c = canvas.Canvas(pdf_path, pagesize=letter)
-#         c.drawImage(qr_image_path, x=100, y=700, width=200, height=200)
-#         c.drawString(100, 680, f"QR Code for Product ID: {product_id}")
-#         c.save()
-#         return pdf_path
-#     except Exception as e:
-#         print(f"Error generating barcode PDF: {e}", file=sys.stderr)
-#         return None
+@receiver(post_save, sender=SparePart)
+def create_qr_code_and_pdf(sender, instance, created, **kwargs):
+    """
+    هذه الدالة تستجيب لإشارة post_save لنموذج SparePart.
+    تقوم بإنشاء كود QR وملف PDF عندما يتم إنشاء كائن جديد لأول مرة.
+    """
+    # الكود سيعمل فقط عندما يكون الكائن جديدًا (created=True)
+    if created:
+        # 1. توليد وحفظ كود QR
+        qrcode_img = qrcode.make(str(instance.id))
+        canvas_img = Image.new('RGB', (200, 200), 'white')
+        qrcode_img = qrcode_img.resize((200, 200))
+        canvas_img.paste(qrcode_img)
 
-# @receiver(post_save, sender=SparePart)
-# def create_qr_pdf(sender, instance, created, **kwargs):
-#     """
-#     Signal to create a QR code PDF when a SparePart object is created.
-#     """
-#     if created:
-#         save_path = os.path.join(os.path.dirname(instance.qr_code.path), 'pdfs/')
+        # حفظ الصورة في الذاكرة المؤقتة
+        fname = f"qr_code_{instance.name}_id_{instance.id}.png"
+        buffer = BytesIO()
+        canvas_img.save(buffer, 'PNG')
+
+        # حفظ الصورة في حقل ImageField
+        instance.qr_code.save(fname, File(buffer), save=False)
+        buffer.close()
         
-#         if not os.path.exists(save_path):
-#             os.makedirs(save_path)
+        # 2. توليد وحفظ ملف PDF
+        pdf_name = f"qr_code_{instance.name}_id_{instance.id}.pdf"
+        pdf_buffer = BytesIO()
+
+        # إنشاء كائن PDF
+        small_page_size = (6 * cm, 3 * cm)
+        pdf_canvas = canvas.Canvas(pdf_buffer, pagesize=landscape(small_page_size))
+
+        # مسار الخط
+        path_font = os.path.join(settings.BASE_DIR, 'static', 'fonts', 'ARIAL.TTF')
         
-#         pdf_path = save_qr_code_as_pdf(instance.id, instance.qr_code.path, save_path)
-#         if pdf_path:
-#             print(f"QR Code PDF created at: {pdf_path}")
-#         else:
-#             print("Failed to create QR Code PDF.")
+        # تسجيل الخط
+        pdfmetrics.registerFont(TTFont('ArabicFont', path_font))
+        
+        def arabic_text(text):
+            reshaped_text = arabic_reshaper.reshape(text)
+            return get_display(reshaped_text)
+            
+        pdf_canvas.setFont("ArabicFont", 6)
+        pdf_canvas.drawString(5, 55, f"Product: {arabic_text(instance.name)}")
+        pdf_canvas.drawString(5, 42, f"Category: {arabic_text(instance.category.name)}")
+        pdf_canvas.drawString(5, 29, f"ID: {instance.id}")
+        pdf_canvas.drawString(5, 16, f"Price: {instance.price} EGP")
+
+        # تحميل وإضافة صورة QR Code
+        qr_code_path = instance.qr_code.path
+        if os.path.exists(qr_code_path):
+            pdf_canvas.drawImage(
+                qr_code_path, 
+                x=3*cm, y=0.2*cm, 
+                width=2.5 * cm, height=2.5 * cm
+            )
+
+        # إنهاء وإنشاء PDF
+        pdf_canvas.save()
+
+        # حفظ ملف PDF في حقل FileField
+        pdf_buffer.seek(0)
+        instance.qr_pdf.save(pdf_name, File(pdf_buffer), save=False)
+        pdf_buffer.close()
+
+        # 3. حفظ الكائن مرة أخيرة لتأكيد مسارات الملفات
+        instance.save()

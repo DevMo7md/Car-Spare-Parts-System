@@ -68,70 +68,6 @@ class SparePart(models.Model):
     def __str__(self):
         return self.name
     
-    def save(self, *args, **kwargs):
-    # احفظ الكائن أولاً للحصول على المعرف (id) المطلوب لتوليد كود QR
-        if not self.id:  # لا تقم بتوليد QR للأشياء التي ليس لها معرف
-            super().save(*args, **kwargs)
-        
-        if not self.qr_code:
-            # توليد كود QR
-            qrcode_img = qrcode.make(self.id)  # استبدل self.id بمحتوى فريد إذا لزم الأمر
-            canvas = Image.new('RGB', (200, 200), 'white')
-            qrcode_img = qrcode_img.resize((200, 200))  # ضبط الحجم ليتطابق مع الـ canvas
-            
-            # لصق كود QR على الـ canvas
-            canvas.paste(qrcode_img)
-
-            # حفظ الصورة في ذاكرة مؤقتة
-            fname = f"qr_code_{self.name}_id_{self.id}.png"
-            buffer = BytesIO()
-            canvas.save(buffer, 'PNG')
-            
-            # حفظ الصورة في حقل ImageField
-            self.qr_code.save(fname, File(buffer), save=False)
-            buffer.close()
-
-        if self.qr_code and not self.qr_pdf:
-            self.create_pdf()
-
-        super().save(*args, **kwargs)
-    def create_pdf(self):
-        # مسار الملف المؤقت
-        pdf_name = f"qr_code_{self.name}_id_{self.id}.pdf"
-        buffer = BytesIO()
-
-        # إنشاء كائن PDF
-        small_page_size = (6 * cm, 3 * cm)  # أبعاد الورقة الصغيرة
-        pdf_canvas = canvas.Canvas(buffer, pagesize=landscape(small_page_size))
-
-        # إضافة النصوص مع تنسيق مناسب
-        path_font = os.path.join(settings.BASE_DIR, 'static/fonts', 'ARIAL.TTF')
-        pdfmetrics.registerFont(TTFont('ArabicFont', path_font))
-        def arabic_text(text):
-            reshaped_text = arabic_reshaper.reshape(text)
-            return get_display(reshaped_text)
-        pdf_canvas.setFont("ArabicFont", 6)
-        pdf_canvas.drawString(5, 55, f"Product: {arabic_text(self.name)}")
-        pdf_canvas.drawString(5, 42, f"Category: {arabic_text(self.category.name)}")
-        pdf_canvas.drawString(5, 29, f"ID: {self.id}")
-        pdf_canvas.drawString(5, 16, f"Price: {self.price} EGP")
-
-        # تحميل وإضافة صورة QR Code مع ضبط حجمها
-        qr_code_path = self.qr_code.path
-        if os.path.exists(qr_code_path):
-            pdf_canvas.drawImage(
-                qr_code_path, 
-                x=3*cm, y=0.2*cm,  # الموقع (معدّل)
-                width=2.5 * cm, height=2.5 * cm  # حجم الصورة
-            )
-
-        # إنهاء وإنشاء PDF
-        pdf_canvas.save()
-
-        # حفظ الملف في الحقل
-        buffer.seek(0)
-        self.qr_pdf.save(pdf_name, File(buffer), save=False)
-        buffer.close()
 
 # تعديل مطلوب --> [supplier, category, price, description, name] *add
 class IncomeBillItem(models.Model):
@@ -143,6 +79,9 @@ class IncomeBillItem(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='income_bill_items', null=True, blank=True)
     quantity = models.PositiveIntegerField(default=1)
     total_price = models.DecimalField(max_digits=10, decimal_places=2 , default=0)
+
+    def __str__(self):
+        return f"{self.spare_part.name} (x{self.quantity}) - {self.income_bill.title}"
 
 
 class Bill(models.Model):

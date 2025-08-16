@@ -47,5 +47,6 @@ urlpatterns = [
     path('income-invoice/<int:bill_id>/pdf/', views.generate_income_invoice_pdf, name='generate_income_invoice_pdf'),
     path('none-available-products/<int:supplier_id>/pdf/', views.generate_empty_products_pdf, name='generate_empty_products_pdf'),
 
-
+    path('upload-invoice/', views.upload_invoice_with_gemini, name='upload_invoice_with_gemini'),
+    path('save-invoice/', views.save_final_invoice, name='save_final_invoice'), # أضف هذا السطر
 ]

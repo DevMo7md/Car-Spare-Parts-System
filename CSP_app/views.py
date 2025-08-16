@@ -1,5 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
+import google.generativeai as genai
+import fitz  # PyMuPDF
+from PIL import Image
+import io
+import json
+from django.db import transaction
 from .models import *
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
@@ -28,7 +34,11 @@ from bidi.algorithm import get_display
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont 
 from reportlab.lib.styles import ParagraphStyle
+from decimal import Decimal
 
+# تهيئة Gemini API
+genai.configure(api_key=settings.GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 # Create your views here.
 def login_view(request):
@@ -1082,3 +1092,138 @@ def generate_empty_products_pdf(request, supplier_id): # generate pdf none avail
     elements.append(table)
     doc.build(elements)
     return response
+
+
+def upload_invoice_with_gemini(request):
+    if request.method == 'POST' and request.FILES.get('invoice_file'):
+        uploaded_file = request.FILES['invoice_file']
+        extracted_data = []
+        suppliers = Supplier.objects.all()
+        categories = Category.objects.all()
+        try:
+            if uploaded_file.content_type.startswith('image'):
+                image_bytes = uploaded_file.read()
+                image = Image.open(io.BytesIO(image_bytes))
+
+                prompt = """
+                Analyze this invoice image. Extract and list the items with their quantity, name, and price.
+                Focus on extracting the product name, quantity, and unit price.
+                Provide the output as a JSON array.
+                Example: [{"item": "Product A", "quantity": 2, "price": 10.50}]
+                """
+                response = model.generate_content([prompt, image])
+                try:
+                    data = json.loads(response.text.replace('```json', '').replace('```', ''))
+                    extracted_data.extend(data)
+                except json.JSONDecodeError:
+                    extracted_data.append({"error": "Failed to parse JSON response."})
+
+            elif uploaded_file.content_type == 'application/pdf':
+                pdf_document = fitz.open(stream=uploaded_file.read(), filetype="pdf")
+                for page_num in range(len(pdf_document)):
+                    page = pdf_document.load_page(page_num)
+                    pix = page.get_pixmap()
+                    img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+
+                    prompt = """
+                    Analyze this invoice page. Extract and list the items with their quantity, name, and price.
+                    Provide the output as a JSON array.
+                    Example: [{"item": "Product A", "quantity": 2, "price": 10.50}]
+                    """
+                    response = model.generate_content([prompt, img])
+                    try:
+                        data = json.loads(response.text.replace('```json', '').replace('```', ''))
+                        extracted_data.extend(data)
+                    except json.JSONDecodeError:
+                        extracted_data.append({"error": "Failed to parse JSON response from PDF page."})
+
+            else:
+                messages.error(request, 'Unsupported file type.')
+                return redirect('upload_invoice_with_gemini')
+
+            suppliers = Supplier.objects.all()
+
+            return render(request, 'confirm_invoice_data.html', {
+                'extracted_data': extracted_data,
+                'suppliers': suppliers,
+                'categories': categories,
+            })
+
+        except Exception as e:
+            messages.error(request, f'An error occurred: {e}')
+            return redirect('upload_invoice_with_gemini')
+
+    return render(request, 'upload_invoice.html')
+
+
+def save_final_invoice(request):
+    if request.method == 'POST':
+        try:
+            with transaction.atomic():
+                bill_title = request.POST.get('bill_title')
+                bill_supplier_id = request.POST.get('bill_supplier')
+                bill_description = request.POST.get('bill_description')
+                bill_date = request.POST.get('bill_date')
+                category_id = request.POST.get('category')
+
+                supplier = Supplier.objects.get(id=bill_supplier_id)
+                category = Category.objects.get(id=category_id)
+
+                new_bill = IncomeBill.objects.create(
+                    title=bill_title,
+                    supplier=supplier,
+                    description=bill_description,
+                    date=bill_date,
+                    amount=0
+                )
+
+                item_names = request.POST.getlist('item_name')
+                quantities = request.POST.getlist('item_quantity')
+                prices = request.POST.getlist('item_price')
+                
+
+                total_invoice_price = decimal.Decimal('0.00')
+
+                for name, quantity, price in zip(item_names, quantities, prices):
+                    quantity = int(quantity)
+                    price = decimal.Decimal(price)
+                    item_total_price = price * quantity
+                    total_invoice_price += item_total_price
+
+                    spare_part, created = SparePart.objects.get_or_create(
+                        name=name.strip(),
+                        supplier=supplier,
+                        category=category,
+                        defaults={
+                            'price': price,
+                            'stock_quantity': quantity,
+                            'income_bill': new_bill,
+                        }
+                    )
+
+                    if not created:
+                        spare_part.stock_quantity += quantity
+                        spare_part.price = price
+                        spare_part.save()
+                    # إنشاء سجل في الفاتورة
+                    IncomeBillItem.objects.create(
+                        income_bill=new_bill,
+                        spare_part=spare_part,
+                        name=name,
+                        quantity=quantity,
+                        price=price,
+                        total_price=item_total_price,
+                        category=category,
+                    )
+
+                new_bill.amount = total_invoice_price
+                new_bill.save()
+
+                messages.success(request, 'Invoice saved successfully!')
+                return redirect('home')
+
+        except Exception as e:
+            messages.error(request, f'An error occurred while saving the invoice: {e}')
+            return redirect('upload_invoice_with_gemini')
+
+    return redirect('home')
