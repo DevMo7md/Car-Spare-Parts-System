@@ -1198,6 +1198,7 @@ def save_final_invoice(request):
                             'price': price,
                             'stock_quantity': quantity,
                             'income_bill': new_bill,
+                            'date': bill_date,
                         }
                     )
 
