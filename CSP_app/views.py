@@ -642,7 +642,7 @@ def add_product(request, income_bill_id):
         try:
             with transaction.atomic():  # 🔹 ضمان أن كل العمليات تتم أو تتلغي بالكامل
 
-                spare_part = SparePart.objects.filter(name__iexact=product_name).first()
+                spare_part = SparePart.objects.filter(Q(name__iexact=product_name) & Q(supplier=product_bill.supplier)).first()
 
                 if spare_part:
                     # تحديث السعر أو البيانات حسب الحالة
@@ -651,6 +651,7 @@ def add_product(request, income_bill_id):
                         spare_part.description = product_description
                         spare_part.category = product_category
                     spare_part.stock_quantity += product_quantity
+                    spare_part.date = product_bill.date
                     spare_part.save()
 
                     # تحديث إجمالي الفاتورة
@@ -681,7 +682,8 @@ def add_product(request, income_bill_id):
                     description=product_description,
                     stock_quantity=product_quantity,
                     category=product_category,
-                    supplier=product_bill.supplier
+                    supplier=product_bill.supplier,
+                    date = product_bill.date,
                 )
                 product.save()
 
@@ -740,6 +742,7 @@ def edit_product(request,pk):
             product_price = decimal.Decimal(request.POST.get('price'))
             product_description = request.POST.get('description')
             product_quantity = int(request.POST.get('quantity'))
+            date = request.POST.get('date')
             product_category_id = request.POST.get('category')
             product_supplier_id = request.POST.get('supplier')
             try :
@@ -754,6 +757,7 @@ def edit_product(request,pk):
             product.stock_quantity = product_quantity
             product.supplier = product_supplier
             product.category = product_category
+            product.date = date
             product.save()
             if product.stock_quantity <= 0:
                 product.is_available = False
