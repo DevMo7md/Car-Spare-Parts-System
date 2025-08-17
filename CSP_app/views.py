@@ -1190,7 +1190,7 @@ def save_final_invoice(request):
                 total_invoice_price = decimal.Decimal('0.00')
 
                 for name, quantity, price in zip(item_names, quantities, prices):
-                    quantity = int(quantity)
+                    quantity = round(float(quantity))
                     price = decimal.Decimal(price)
                     item_total_price = price * quantity
                     total_invoice_price += item_total_price
