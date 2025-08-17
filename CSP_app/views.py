@@ -1205,6 +1205,7 @@ def save_final_invoice(request):
                     if not created:
                         spare_part.stock_quantity += quantity
                         spare_part.price = price
+                        spare_part.date = bill_date
                         spare_part.save()
                     # إنشاء سجل في الفاتورة
                     IncomeBillItem.objects.create(
