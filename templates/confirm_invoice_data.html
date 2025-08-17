@@ -89,7 +89,7 @@
                 {% for item in extracted_data %}
                 <tr>
                     <td><input type="text" name="item_name" value="{{ item.item }}" class="form-control"></td>
-                    <td><input type="number" name="item_quantity" value="{{ item.quantity }}" class="form-control"></td>
+                    <td><input type="number" name="item_quantity" value="{{ item.quantity }}" min="1" step="1" class="form-control"></td>
                     <td><input type="number" name="item_price" value="{{ item.price }}" step="0.01" class="form-control"></td>
                 </tr>
                 {% endfor %}
@@ -237,5 +237,28 @@ $(document).on('submit', '#supplier-form', function(e) {
         }
     });
 });
+
+document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+    let valid = true;
+
+    // كل الحقول اللي محتاج تتأكد إنها integers
+    const quantities = document.querySelectorAll('input[name="item_quantity"]');
+
+    quantities.forEach(field => {
+        let val = parseFloat(field.value);
+        if (!Number.isInteger(val)) {
+            valid = false;
+            field.style.border = '2px solid red'; // تمييز الحقل الغلط
+        } else {
+            field.style.border = ''; // إزالة التمييز لو صحيح
+        }
+    });
+
+    if (!valid) {
+        e.preventDefault(); // منع الفورم من الإرسال
+        alert('الرجاء التأكد من أن كل القيم أعداد صحيحة!');
+    }
+});
+
 </script>
 {% endblock %}

@@ -19,7 +19,7 @@ from django.db import transaction
 import shutil
 from django.conf import settings
 from django.urls import reverse
-from datetime import timedelta
+from datetime import timedelta, datetime
 import datetime
 from django.utils import timezone
 from django.utils.crypto import get_random_string
@@ -301,6 +301,7 @@ def edit_income_bill(request, pk):
         income_bill.title = request.POST.get('title')
         income_bill.description = request.POST.get('description')
         supplier_id = request.POST.get('supplier')
+        income_bill.date = request.POST.get('date')
         income_bill.supplier = get_object_or_404(Supplier, id=supplier_id)
         income_bill.save()
         messages.success(request, "تم تحديث الفاتورة بنجاح")
@@ -648,8 +649,12 @@ def add_product(request, income_bill_id):
                     # تحديث السعر أو البيانات حسب الحالة
                     if product_price >= spare_part.price:
                         spare_part.price = product_price
-                    if spare_part.date is None or product_bill.date > spare_part.date:
-                        spare_part.date = product_bill.date
+                    if isinstance(product_bill.date, str):
+                        product_bill_date = datetime.datetime.strptime(product_bill.date, "%Y-%m-%d").date()
+                    else:
+                        product_bill_date = product_bill.date
+                    if spare_part.date is None or product_bill_date > spare_part.date:
+                        spare_part.date = product_bill_date
                     spare_part.description = product_description
                     spare_part.category = product_category
                     spare_part.stock_quantity += product_quantity
@@ -1210,6 +1215,8 @@ def save_final_invoice(request):
                     if not created:
                         if spare_part.price < price:
                             spare_part.price = price
+                        if isinstance(bill_date, str):
+                            bill_date = datetime.datetime.strptime(bill_date, "%Y-%m-%d").date()
                         if spare_part.date is None or bill_date > spare_part.date:
                             spare_part.date = bill_date
                         spare_part.stock_quantity += quantity
