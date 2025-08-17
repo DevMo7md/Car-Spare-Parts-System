@@ -648,10 +648,11 @@ def add_product(request, income_bill_id):
                     # تحديث السعر أو البيانات حسب الحالة
                     if product_price >= spare_part.price:
                         spare_part.price = product_price
-                        spare_part.description = product_description
-                        spare_part.category = product_category
+                    if spare_part.date is None or product_bill.date > spare_part.date:
+                        spare_part.date = product_bill.date
+                    spare_part.description = product_description
+                    spare_part.category = product_category
                     spare_part.stock_quantity += product_quantity
-                    spare_part.date = product_bill.date
                     spare_part.save()
 
                     # تحديث إجمالي الفاتورة
@@ -1207,9 +1208,11 @@ def save_final_invoice(request):
                     )
 
                     if not created:
+                        if spare_part.price < price:
+                            spare_part.price = price
+                        if spare_part.date is None or bill_date > spare_part.date:
+                            spare_part.date = bill_date
                         spare_part.stock_quantity += quantity
-                        spare_part.price = price
-                        spare_part.date = bill_date
                         spare_part.save()
                     # إنشاء سجل في الفاتورة
                     IncomeBillItem.objects.create(
