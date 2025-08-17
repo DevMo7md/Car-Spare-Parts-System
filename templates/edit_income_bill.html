@@ -21,6 +21,10 @@
                 <input type="text" name="title" value="{{income_bill.title}}" class="form-control" id="exampleFormControlInput1">
             </div>
             <div class="mb-3">
+                <label class="form-label mt-3">تاريخ الفاتورة:</label>
+                <input type="date" value="{{ product.date|date:'Y-m-d' }}" name="date" class="form-control">
+            </div>
+            <div class="mb-3">
                 <label for="exampleFormControlTextarea1" class="form-label">ملاحظات</label>
                 <textarea class="form-control" name="description" id="exampleFormControlTextarea1" rows="3">{{income_bill.description}}</textarea>
             </div>

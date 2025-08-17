@@ -35,9 +35,9 @@
                     <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.title}}</th>
                     <th onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;" scope="row">{{bill.supplier.name}}</th>
                     {% if bill.date %}
-                    <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.date|date_in_arabic:"medium"}}</td>
+                    <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.date|date:'Y-m-d'}}</td>
                     {% else %}
-                    <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.created_at|date_in_arabic:"medium"}}</td>
+                    <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.created_at|date:'Y-m-d'}}</td>
                     {% endif %}
                     
                     <td onclick="window.location.href='{% url 'income_bill_item' bill.id %}';" style="cursor: pointer;">{{bill.amount}}</td>
