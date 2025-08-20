@@ -3,6 +3,8 @@
 ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-4.x-red?logo=django&logoColor=white)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![AI](https://img.shields.io/badge/AI-Enabled-purple?logo=openai&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Enabled-blue?logo=docker&logoColor=white)
 
 
 نظام إدارة قطع غيار السيارات هو مشروع بسيط يهدف إلى تسهيل إدارة قطع الغيار في ورشة أو متجر سيارات. يتيح النظام للمستخدمين إضافة قطع غيار جديدة، تعديلها، حذفها، وعرضها بطريقة منظمة وسهلة.
@@ -27,9 +29,15 @@
 
 - Python 3.x
 - نظام تشغيل يدعم Python (Windows, macOS, Linux)
+- Docker
 
 ## كيفية التشغيل
 
 1. قم بتنزيل أو استنساخ المستودع:
    ```bash
    git clone https://github.com/DevMo7md/Car-Spare-Parts-System.git
+   cd Car-Spare-Parts-System
+   docker-compose up
+   docker-compose logs -f
+   ```
+   then you can open : http://localhost:8000 
