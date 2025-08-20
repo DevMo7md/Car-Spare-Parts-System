@@ -41,5 +41,6 @@
    docker-compose up
    docker-compose logs -f
    ```
-   (`docker-compose build`) in first run only
-   then you can open : http://localhost:8000 
+   - (`docker-compose build`) in first run only
+
+   - then you can open : http://localhost:8000 
