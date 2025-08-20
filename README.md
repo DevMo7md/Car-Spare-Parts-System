@@ -37,7 +37,9 @@
    ```bash
    git clone https://github.com/DevMo7md/Car-Spare-Parts-System.git
    cd Car-Spare-Parts-System
+   docker-compose build
    docker-compose up
    docker-compose logs -f
    ```
+   (`docker-compose build`) in first run only
    then you can open : http://localhost:8000 
